@@ -302,3 +302,5 @@ TSWLatexianTemp*
 
 .vscode
 settings.json
+
+*.pdf

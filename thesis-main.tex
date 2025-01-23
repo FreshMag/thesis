@@ -21,8 +21,8 @@
 % Definition of acronyms
 \acrodef{IoT}{Internet of Thing}
 \acrodef{vm}[VM]{Virtual Machine}
-\acrodef{ide}[IDE]{Integrated Development Environment}
-\acrodef{ci}[CI]{Continuous Integration}
+\acrodef{IDE}[IDE]{Integrated Development Environment}
+\acrodef{CI}[CI]{Continuous Integration}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -52,35 +52,95 @@ Optional. Max a few lines.
 \label{chap:introduction}
 %----------------------------------------------------------------------------------------
 
-Analyzing characteristics of the source code without necessarily building and executing it
-(i.e., static analysis) is a process that has been studied and implemented in various 
-forms during the last decades. Various tools have been developed to perform such a task, 
-each with its own strengths and weaknesses.
+Analyzing characteristics of the source code without necessarily building and
+executing it (i.e., static analysis) is a process that has been studied and
+implemented in various forms during the last decades. Various tools have been
+developed to perform such a task, each with its own strengths and weaknesses.
 %
-The need for such a tool is often evident in the software development process, where ensuring the 
-\textbf{quality} and \textbf{robustness} of software systems is a critical concern. Using 
-code quality analysis techniques is also a powerful mean to avoid situations of 
-``technical debt" \cite{DBLP:conf/sigsoft/ErnstBONG15}, that targets the system quality
-in maintenance and evolution.
-%
-As the system grows in complexity, so does the variety of errors and vulnerabilities that can 
-be detected through tools (e.g., concurrency management issues, error handling, etc.). 
-At the same time, adhering to coding standards helps to avoid both trivial and non-trivial
-errors from the outset. Additionally, these are among the easiest types of tools to integrate, 
-often already included within \acp{ide}.
-%
-The effectiveness of static analysis tools has been the subject of various studies,  
-\cite{DBLP:journals/jss/LenarduzziPSLP23} evaluating their detection capabilities, agreement, 
-and precision. Some of these studies revealed a low degree of agreement among the tools and 
-highlighted the need for a better understanding of their actual capabilities.  
-%
-In the last years, the static analysis tools have become more popular and easier to use, 
-becoming protagonists of many \ac{ci} pipelines \cite{DBLP:conf/msr/ZampettiSOCP17} that 
-automatically performs checks on the entire source code, embracing change and evolution of 
-the software without making it a threat \cite{DBLP:books/daglib/0015650}, 
-backed by a solid safety net.
-%
+The need for such a tool is often evident in the software development process,
+where ensuring the \textbf{quality} and \textbf{robustness} of software systems
+is a critical concern. Using code quality analysis techniques is also a powerful
+mean to avoid situations of ``technical debt"
+\cite{DBLP:conf/sigsoft/ErnstBONG15}, that targets the system quality in
+maintenance and evolution.
 
+As the system grows in complexity, so does the variety of errors and
+vulnerabilities that can be detected through tools (e.g., concurrency management
+issues, error handling, etc.). At the same time, adhering to coding standards
+helps to avoid both trivial and non-trivial errors from the outset.
+Additionally, these are among the easiest types of tools to integrate, often
+already included within \acp{IDE}.
+%
+The effectiveness of static analysis tools has been the subject of various
+studies,  \cite{DBLP:journals/jss/LenarduzziPSLP23} evaluating their detection
+capabilities, agreement, and precision. Some of these studies revealed a low
+degree of agreement among the tools and highlighted the need for a better
+understanding of their actual capabilities. More advance tools have been used
+also to rewrite code and help with the development of very complex systems,
+like \emph{Coccinelle} for the Linux kernel
+\cite{DBLP:conf/eurosys/PadioleauLHM08}\cite{DBLP:conf/usenix/LawallM18}.
+%
+More over, in the last years, the static analysis tools have become more popular
+and easier to use, becoming protagonists of many \ac{CI} pipelines
+\cite{DBLP:conf/msr/ZampettiSOCP17} that automatically performs checks on the
+entire source code, embracing change and evolution of the software without
+making it a threat \cite{DBLP:books/daglib/0015650}, backed by a solid safety
+net.
+
+If looked from another perspective, automated static analysis tools and
+compilers share significant similarities in their operations. Both perform
+thorough examinations of source code without executing it, aiming to identify
+errors, enforce coding standards, and optimize performance. Most of what
+compilers do on the static analysis side is to facilitate code optimization and
+error detection during the compilation process. In fact, a compiler can be
+viewed as a form of static analysis tool, as it analyzes code to generate
+executable programs and associated debugging information
+\cite{DBLP:journals/queue/Thomson21}.
+%
+Specialized static analysis tools, on the other hand, extend beyond the
+capabilities of standard compilers by offering additional functionalities and
+broader diagnostic capabilities. They offer a broader range of diagnostic rules,
+enabling the detection of specific and uncommon bugs that compilers might
+overlook.
+%
+What if, however, the compiler were extended beyond its core functionality,
+incorporating specialized capabilities that go beyond the scope of a
+general-purpose environment? These extensions could be designed to address the
+unique requirements of a specific project or domain. This is precisely where
+\textbf{compiler plugins} come into play.
+
+\section{Definition and Purpose of Compiler Plugins}
+
+Compiler plugins are dynamic modules that interact with the compiler during its
+various phases, enabling the introduction of new functionalities or the
+modification of existing behaviors. They serve as intermediaries that can
+inspect, modify, or enhance the compilation process, providing developers with
+the flexibility to implement domain-specific checks, optimizations, or
+transformations, all without altering the compiler's core architecture. 
+%
+For instance, in the context of the GNU Compiler Collection
+(GCC), plugins allow for the addition of new features without necessitating
+modifications to the compiler itself (mostly, again, for optimization purposes).
+
+\subsection{Types of Compiler Plugins}
+
+Compiler plugins can be broadly categorized based on the phase of compilation they target:
+
+\begin{itemize}
+  \item \textbf{Frontend Plugins}: These plugins operate during the initial
+  stages of compilation, focusing on tasks such as syntax analysis, semantic
+  analysis, and intermediate representation generation. They are useful also for
+  implementing custom syntax extensions, enforcing coding standards, or
+  performing static code analyzes. For example, in the \emph{Rust} programming
+  language, compiler plugins can introduce new syntax extensions and lint
+  checks. 
+
+  \item \textbf{Backend Plugins}: Functioning in the latter stages of
+  compilation, backend plugins are concerned with code optimization, machine
+  code generation, and platform-specific adjustments. They can be utilized to
+  implement custom optimizations, support additional hardware
+  architectures and more.
+\end{itemize}
 
 
 % TO REMOVE

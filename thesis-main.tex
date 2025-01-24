@@ -23,6 +23,9 @@
 \acrodef{vm}[VM]{Virtual Machine}
 \acrodef{IDE}[IDE]{Integrated Development Environment}
 \acrodef{CI}[CI]{Continuous Integration}
+\acrodef{AST}[AST]{Abstract Syntax Tree}
+\acrodef{KAPT}{Kotlin Annotation Processing Tool}
+\acrodef{KSP}{Kotlin Symbol Processing}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -60,7 +63,7 @@ developed to perform such a task, each with its own strengths and weaknesses.
 The need for such a tool is often evident in the software development process,
 where ensuring the \textbf{quality} and \textbf{robustness} of software systems
 is a critical concern. Using code quality analysis techniques is also a powerful
-mean to avoid situations of ``technical debt"
+mean to avoid situations of ``technical debt''
 \cite{DBLP:conf/sigsoft/ErnstBONG15}, that targets the system quality in
 maintenance and evolution.
 
@@ -142,6 +145,45 @@ Compiler plugins can be broadly categorized based on the phase of compilation th
   architectures and more.
 \end{itemize}
 
+\subsection{Compiler Plugins in Kotlin}
+
+Kotlin, a statically typed programming language developed by JetBrains, offers
+robust support for compiler plugins, allowing developers to highly customize the
+compilation process to their specific needs. 
+%
+Kotlin's compiler architecture facilitates the creation of plugins that can
+modify or extend its behavior during compilation. For example, the
+\emph{'all-open'} compiler plugin in Kotlin allows classes annotated with a
+specific annotation to be open without the explicit \lstinline{open} keyword,
+adapting Kotlin to the requirements of frameworks that require classes to be
+open. 
+
+When guiding developers in the creation of compiler plugins, however, JetBrains
+compares them to \textbf{Annotation Processors}
+\cite{JetBrains:KotlinCompilerPlugin}. Annotation processors are a powerful
+feature in many modern programming languages, including Java and Kotlin, that
+allow developers to generate code, validate code, and perform various
+compile-time checks based on \textbf{annotations} present in the source code.
+%
+In Java, annotation processors are part of the Java Compiler API and can be used
+to generate additional source files, validate the correctness of the code, and
+even modify the \ac{AST} of the code being compiled. They are
+commonly used in frameworks and libraries to reduce boilerplate code and enforce
+coding standards.
+%
+Kotlin also supports annotation processors through the \ac{KAPT} (which is, in
+fact, a compiler plugin itself), which allows Kotlin code to interoperate with
+Java annotation processors and, more recently, the \ac{KSP} (another compiler
+plugin introduced as "an API that you can use to develop lightweight compiler
+plugins"). The former enables developers to leverage existing Java annotation
+processors in their Kotlin projects and the latter, on the other hand, provides
+a more efficient and Kotlin-specific way to generate code at compile time,
+offering a new approach that is much more integrated with Kotlin symbols.
+
+\subsection{Compiler Plugins advantages}
+
+Compiler plugins and Annotation Processors, however, have some very distinct
+functionalities. 
 
 % TO REMOVE
 %----------------------------------------------------------------------------------------

@@ -26,6 +26,7 @@
 \acrodef{AST}[AST]{Abstract Syntax Tree}
 \acrodef{KAPT}{Kotlin Annotation Processing Tool}
 \acrodef{KSP}{Kotlin Symbol Processing}
+\acrodef{IR}{Intermediate Representation}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -183,20 +184,47 @@ offering a new approach that is much more integrated with Kotlin symbols.
 \subsection{Compiler Plugins advantages}
 
 Compiler plugins and Annotation Processors, however, have some very distinct
-functionalities. 
+functionalities. While Annotation Processors are limited to generating source
+code and performing checks based on annotations, compiler plugins can exploit a
+very powerful API that can create and modify byte-code, elements inside the
+\ac{IR} and more, allowing the developers to solve a whole new class of
+meta-programming problems. Of course, Annotation Processors are typically easier
+to write and maintain than compiler plugins, but this extra cost can be worth in
+several cases, for example the in the scenario that will be presented in this
+thesis.
 
-% TO REMOVE
-%----------------------------------------------------------------------------------------
-Write your intro here.
-\sidenote{Add sidenotes in this way. They are named after the author of the thesis}
+\section{Development of a Frontend Compiler Plugins}
 
-For instance,
-that you are discussing \acp{vm},
-you may need both \ac{vm} and \acp{vm}.
+At the time of writing, the development of frontend compiler plugins in Kotlin is
+still a relatively less explored area compared to the backend ones.
+
+
+\subsection{The importance of Build Tools}
+
+Before proceeding with the explanation of the main structure of this thesis, it
+is important to mention the role of build tools in the development process of a
+compiler plugin. Without a seamless integration of the compiler plugin during
+the compilation process (and, as it will be shown, the testing process as well), the
+development of a compiler plugin would be cumbersome and error-prone. 
+%
+Needless to say, a well-configured build tool is a fundamental requirement in
+this context. Within the Kotlin ecosystem — on which this work focuses — the most
+widely used build tool is \emph{Gradle}, and it will serve as the foundation for
+the implementations discussed in this thesis.
 
 \paragraph{Structure of the Thesis}
 
-\note{At the end, describe the structure of the paper}
+
+% TO REMOVE
+%----------------------------------------------------------------------------------------
+%Write your intro here.
+%\sidenote{Add sidenotes in this way. They are named after the author of the thesis}
+
+%For instance,
+%that you are discussing \acp{vm},
+%you may need both \ac{vm} and \acp{vm}.
+
+%\note{At the end, describe the structure of the paper}
 
 
 

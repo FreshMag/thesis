@@ -154,12 +154,12 @@ compilation process to their specific needs.
 %
 Kotlin's compiler architecture facilitates the creation of plugins that can
 modify or extend its behavior during compilation. For example, the
-\emph{'all-open'} compiler plugin in Kotlin allows classes annotated with a
+\emph{all-open} compiler plugin in Kotlin allows classes annotated with a
 specific annotation to be open without the explicit \lstinline{open} keyword,
-adapting Kotlin to the requirements of frameworks that require classes to be
+adapting Kotlin to the requirements of frameworks that need classes to be
 open. 
 
-When guiding developers in the creation of compiler plugins, however, JetBrains
+When guiding developers towards the creation of compiler plugins, JetBrains
 compares them to \textbf{Annotation Processors}
 \cite{JetBrains:KotlinCompilerPlugin}. Annotation processors are a powerful
 feature in many modern programming languages, including Java and Kotlin, that
@@ -172,11 +172,11 @@ even modify the \ac{AST} of the code being compiled. They are
 commonly used in frameworks and libraries to reduce boilerplate code and enforce
 coding standards.
 %
-Kotlin also supports annotation processors through the \ac{KAPT} (which is, in
-fact, a compiler plugin itself), which allows Kotlin code to interoperate with
-Java annotation processors and, more recently, the \ac{KSP} (another compiler
-plugin introduced as "an API that you can use to develop lightweight compiler
-plugins"). The former enables developers to leverage existing Java annotation
+Kotlin also supports annotation processors through the \ac{KAPT} — which is, in
+fact, a compiler plugin itself — that allows Kotlin code to interoperate with
+Java annotation processors and, more recently, the \ac{KSP}, another compiler
+plugin introduced as ``an API that you can use to develop lightweight compiler
+plugins''. The former enables developers to leverage existing Java annotation
 processors in their Kotlin projects and the latter, on the other hand, provides
 a more efficient and Kotlin-specific way to generate code at compile time,
 offering a new approach that is much more integrated with Kotlin symbols.
@@ -190,14 +190,24 @@ very powerful API that can create and modify byte-code, elements inside the
 \ac{IR} and more, allowing the developers to solve a whole new class of
 meta-programming problems. Of course, Annotation Processors are typically easier
 to write and maintain than compiler plugins, but this extra cost can be worth in
-several cases, for example the in the scenario that will be presented in this
+several cases, for example in the scenario that will be presented in this
 thesis.
 
 \section{Development of a Frontend Compiler Plugins}
 
 At the time of writing, the development of frontend compiler plugins in Kotlin is
-still a relatively less explored area compared to the backend ones.
-
+still a relatively less explored area compared to the backend ones. Because of the 
+very little documentation and examples available, the development of frontend 
+compiler plugins can be a challenging task, that quite often requires inspecting 
+the Kotlin compiler source code to understand how to interact with it.
+%
+Frontend compiler plugins can be implemented using \textit{Extensions} to the
+Kotlin compiler, a topic that will be covered more in detail in the following
+chapters. This thesis presents the development process of a frontend compiler
+plugin designed to build upon an existing \textit{backend} plugin. The primary
+purpose of this frontend plugin is to perform static checks on source code,
+ensuring compliance with specific rules related to the functionality of the
+pre-existing backend plugin.
 
 \subsection{The importance of Build Tools}
 
@@ -214,6 +224,24 @@ the implementations discussed in this thesis.
 
 \paragraph{Structure of the Thesis}
 
+This thesis follows the development process of a frontend compiler plugin from
+its initial steps, addressing the key challenges encountered as well as the
+solutions proposed during the research and implementation phases. The next
+chapter, \cref{chap:background}, provides an overview of the ongoing project for
+which this frontend plugin is being developed, alongside the technical
+background necessary to understand how a plugin can interact with the Kotlin
+compiler.
+%
+\Cref{chap:contribution} delves into the core development process of the plugin,
+discussing the design decisions, alternative approaches considered, and the
+final implementation of the proposed \textbf{checkers}. Subsequently,
+\cref{chap:evaluation} evaluates the plugin’s behavior, with a particular focus
+on the testing methodology adopted, including the integration of a custom
+testing framework named \emph{Subjekt}, developed specifically for this purpose.
+%
+Lastly, \cref{chap:conclusion} summarizes the primary contributions of this
+thesis and outlines potential directions for future work, building on the
+results and insights gained throughout this research.
 
 % TO REMOVE
 %----------------------------------------------------------------------------------------

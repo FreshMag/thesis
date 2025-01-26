@@ -27,6 +27,7 @@
 \acrodef{KAPT}{Kotlin Annotation Processing Tool}
 \acrodef{KSP}{Kotlin Symbol Processing}
 \acrodef{IR}{Intermediate Representation}
+\acrodef{DSL}{Domain Specific Language}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -255,23 +256,74 @@ results and insights gained throughout this research.
 %\note{At the end, describe the structure of the paper}
 
 
-
-
 %----------------------------------------------------------------------------------------
 \chapter{Background: the Collektive case}
 \label{chap:background}
 %----------------------------------------------------------------------------------------
 
-I suggest referencing stuff as follows: \cref{fig:random-image} or \Cref{fig:random-image}
+As already stated, the development of the frontend compiler plugin presented in
+this thesis will be built on top of an existing backend plugin. The backend
+plugin is part of a larger project named \emph{Collektive}, a Kotlin
+multiplatform framework that provides a \ac{DSL} for the \textbf{Aggregate
+Computing} \cite{Beal2015} paradigm. This chapter will provide an overview of
+the concepts behind Collektive as well as the feature behind its backend plugin
+and Kotlin compiler plugins development in general.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=.8\linewidth]{figures/random-image.pdf}
-    \caption{Some random image}
-    \label{fig:random-image}
-\end{figure}
+\section{Aggregate Computing}
 
-\section{Some cool topic}
+The Aggregate computing paradigm is a novel approach to ``design, create and
+maintain'' \cite{Beal2015} complex distributed systems, particularly in the 
+context of the Internet of Things (IoT). The paradigm shifts the focus from
+individual devices to regions of devices, abstracting away the details of their
+number, position, and behavior. This abstraction enables developers to reason
+about distributed systems in terms of \emph{collective} operations over spatial and
+temporal fields, rather than device-to-device interactions. 
+
+The foundation of aggregate programming is built on \textbf{field calculus}
+\cite{Beal2014TowardsAU}, a set of constructs designed for spatial computing.
+These constructs enable the implementation of robust coordination mechanisms,
+such as self-stabilizing and scalable operations \cite{Viroli2018}
+\cite{DBLP:journals/jlap/ViroliBDACP19}, which adapt dynamically to changes in
+the environment. Applications of aggregate programming are particularly
+impactful in large-scale scenarios, such as crowd management during public
+events, where distributed devices coordinate to provide services like crowd
+density estimation, dispersal advice, and navigation support.
+
+Aggregate computing formalism has been proposed in various ways, introducing
+syntaxes and semantics to support distributed, collective behaviors in dynamic
+systems. Field calculus, as a foundational model, supports aggregate computing
+by enabling global-level manipulation of computational fields through a
+minimalistic syntax. 
+%
+The flexibility of aggregate computing lies in its ability to build reusable
+computational blocks. These blocks can be composed to address complex
+requirements while maintaining modularity, enabling developers to reason about
+collective behaviors at higher levels of abstraction. Tools like Protelis
+\cite{DBLP:conf/saso/PianiniBV17}, ScaFi \cite{DBLP:conf/ecoop/CasadeiV16} and
+the recently proposed eXchange Calculus (XC)
+\cite{DBLP:journals/jss/AudritoCDSV24} extend field calculus principles,
+providing programming frameworks and language constructs to bridge the gap
+between theoretical models and practical implementations.
+
+Managing the programming line of action for these kinds of systems is not
+trivial, but several approaches have already been proposed, including static and
+dynamic checks that can spot subtle bugs and vulnerabilities in the code, by
+focusing on concepts like \textbf{neighborhood interactions} and \textbf{domain
+alignment} \cite{DBLP:conf/saso/AudritoDVC16}.
+
+\section{Collektive: an Aggregate Computing Framework}
+
+
+
+% I suggest referencing stuff as follows: \cref{fig:random-image} or \Cref{fig:random-image}
+
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=.8\linewidth]{figures/random-image.pdf}
+%    \caption{Some random image}
+%    \label{fig:random-image}
+%\end{figure}
+
 
 %----------------------------------------------------------------------------------------
 \chapter{Contribution}

@@ -283,13 +283,9 @@ systems. Field calculus, as a foundational model, supports aggregate computing
 by enabling global-level manipulation of computational fields through a
 minimalistic syntax. 
 %
-The flexibility of aggregate computing lies in its ability to build reusable
-computational blocks. These blocks can be composed to address complex
-requirements while maintaining modularity, enabling developers to reason about
-collective behaviors at higher levels of abstraction. Tools like Protelis
-\cite{DBLP:conf/saso/PianiniBV17}, ScaFi \cite{DBLP:conf/ecoop/CasadeiV16} and
-the recently proposed eXchange Calculus (XC)
-\cite{DBLP:journals/jss/AudritoCDSV24} extend field calculus principles,
+Tools like Protelis \cite{DBLP:conf/saso/PianiniBV17}, ScaFi
+\cite{DBLP:conf/ecoop/CasadeiV16} and the recently proposed eXchange Calculus
+(XC) \cite{DBLP:journals/jss/AudritoCDSV24} extend field calculus principles,
 providing programming frameworks and language constructs to bridge the gap
 between theoretical models and practical implementations.
 
@@ -299,9 +295,72 @@ dynamic checks that can spot subtle bugs and vulnerabilities in the code, by
 focusing on concepts like \textbf{neighborhood interactions} and \textbf{domain
 alignment} \cite{DBLP:conf/saso/AudritoDVC16}.
 
+\subsection{Main aspects}
+
+In Aggregate Computing, the main model of the system consists of a \emph{network of 
+intercommunicating devices}, which can be \emph{close} to one another therefore 
+introducing a concept of \textbf{neighborhood}. 
+%
+Each device is equipped with sensors and actuators, enabling interaction with an
+environment, and can communicate with other devices through a
+\emph{message-passing} system. 
+
+A key aspect of Aggregate Computing regards the execution model, which is based
+on a local program identical for all devices. The system is governed by a
+continuously executed loop that makes the devices \emph{receive messages},
+\emph{produce a result through their internal behavior} and finally \emph{send
+values to neighbors}. 
+%
+This simple structure allows for system to show self-organizing behaviors
+emerging from the \emph{collective} of devices, and contemplates even complex
+interactions of the devices with the environment (e.g. creation of new devices).
+
+Finally, as already said, the \emph{field calculus} model can be implemented
+through an ad-hoc API and syntax to perform operations on a \emph{computational
+field} (i.e., a mapping from device locations to values in our example)
+manipulating it over time, defining interactions between devices and finally
+creating the emergent behavior.
+%
+After the previous tools already cited, it is now necessary to
+introduce the Aggregate Computing framework that will be the target of the
+frontend plugin in this thesis: \emph{Collektive}.
+
 \section{Collektive: an Aggregate Computing Framework}
 
+\emph{Collektive} is a modern Aggregate Computing framework developed in Kotlin 
+that allows developers to easily write Aggregate Computing programs through a 
+flexible \emph{internal} DSL. The framework is designed to be multiplatform,
+targeting both JVM and JavaScript platforms, as well as native ones. 
+%
+Compared to some other existing Aggregate Computing frameworks, Collektive
+offers a modern and idiomatic approach to writing Aggregate Computing programs,
+with a static type system (as it is internal to Kotlin) and few, expressive
+constructs like \lstinline{neighboring} and \lstinline{exchange}, which can be
+used to implement a broad variety of interactions between devices (and also
+Aggregate Computing patterns).
 
+The project is organized in modules, with the main one being the \lstinline{dsl}
+and \lstinline{compiler-plugin}, and is tested using the Alchemist simulator
+\cite{DBLP:journals/jos/PianiniMV13}. 
+
+\subsection{Collektive Compiler Plugin}
+
+As previously introduced, Collektive provides an already integrated
+\textbf{backend compiler plugin}. This plugin is responsible for managing the
+\emph{alignment of aggregate computation}, a very important concept when dealing
+with Aggregate computing programs, faced in several studies
+\cite{DBLP:conf/forte/DamianiVPB15} \cite{DBLP:conf/saso/AudritoDVC16}.
+%
+Essentially, the domain alignment is a necessary step to ensure that when a
+device computes a value that depends on neighboring devices (e.g., through the
+\lstinline{neighboring} construct, which retrieves values from neighbors), those
+neighboring devices have computed the same expression in the same evaluation
+round. This guarantees that shared computations remain consistent across
+devices: it's necessary in order to \textbf{maintain consistency between field
+values} and \text{prevent information leakage} because ``without it, information
+may leak unexpectedly between devices that are evaluating different functions,
+or may be “blocked” from passing between devices evaluating the same function''
+\cite{DBLP:conf/forte/DamianiVPB15}.
 
 % I suggest referencing stuff as follows: \cref{fig:random-image} or \Cref{fig:random-image}
 

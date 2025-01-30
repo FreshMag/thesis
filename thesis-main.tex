@@ -343,6 +343,42 @@ The project is organized in modules, with the main one being the \lstinline{dsl}
 and \lstinline{compiler-plugin}, and is tested using the Alchemist simulator
 \cite{DBLP:journals/jos/PianiniMV13}. 
 
+\subsection{Collektive DSL: main concepts}
+
+In order to understand how to work on Collektive programs, we first need to
+understand its main usage. Collektive DSL is centered around the
+\lstinline{aggregate} function, which is the entry point for the Aggregate
+Computing program. The function uses a local ID to identify the device on which
+is executed on and then accepts a function type with receiver
+\lstinline{compute: Aggregate<ID>.() -> R} that performs the aggregate
+computation using the \lstinline{Aggregate} interface members.
+%
+The \lstinline{Aggregate} interface provides several functions that represent
+the main constructs of Collektive's implementation of the Aggregate Computing
+paradigm. The most important ones are:
+\begin{itemize}
+  \item \lstinline{neighboring}: a function that observes expressions on
+  neighbors, returning the related field;
+  \item \lstinline{exchange}: a function that, taken from the documentation of
+  Collektive, ``manages the computation of values between neighbors in a
+  specific context''. In practice, it can be used to compute a new field of 
+  values starting from initial values of neighbors;
+  \item \lstinline{evolve}: updates an initial value iteratively computing an
+  expression at each device;
+  \item \lstinline{share}: performs a field computation starting from neighbors'
+  values, reducing them to a single value and then sharing it with neighbors. 
+  It can be used to actuate a ``space-time evolution'' on the field.
+\end{itemize}
+
+Some of these constructs is present also in a variant that allows to return a
+different type of value from the initial one; the name of the variant is 
+the same of the original function but with the suffix \lstinline{-ing} (e.g., 
+\lstinline{exchanging}, \lstinline{evolving} etc.).
+
+Just by using these four constructs, already complex collective behaviors can
+be achieved. Besides that, the Collektive DSL hides several operations through
+the already mentioned compiler plugin. 
+
 \subsection{Collektive Compiler Plugin}
 
 As previously introduced, Collektive provides an already integrated
@@ -361,6 +397,28 @@ values} and \text{prevent information leakage} because ``without it, information
 may leak unexpectedly between devices that are evaluating different functions,
 or may be “blocked” from passing between devices evaluating the same function''
 \cite{DBLP:conf/forte/DamianiVPB15}.
+
+Collektive \emph{backend} compiler plugins works by analyzing call sites and
+function definitions in the code, intercepting the ones that involve aggregate
+computation and that should, therefore, be ``aligned''. Essentially, this is
+done by looking at \lstinline{Aggregate} interface usage in functions,
+especially when used as receiver, and visiting their declarations, wrapping
+aggregate constructs usages with special \lstinline{align} and
+\lstinline{dealign} functions that perform domain alignment under the hood.
+%
+As we will see, this is not always automatic or safe in certain situations 
+(e.g., loops), and the frontend extension will take care of these extra 
+checks. 
+
+But how do Kotlin compiler plugins work in general? Before diving into the 
+core development of the frontend plugin, it is necessary to understand their
+main structure and how they interact with the Kotlin compiler.
+
+\section{Kotlin Compiler Plugins}
+
+
+
+\section{Motivations}
 
 % I suggest referencing stuff as follows: \cref{fig:random-image} or \Cref{fig:random-image}
 

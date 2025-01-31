@@ -28,6 +28,9 @@
 \acrodef{KSP}{Kotlin Symbol Processing}
 \acrodef{IR}{Intermediate Representation}
 \acrodef{DSL}{Domain Specific Language}
+\acrodef{IR}{Intermediate Representation}
+\acrodef{FIR}{Frontend Intermediate Representation}
+\acrodef{PSI}{Programming Structure Interface}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -134,7 +137,7 @@ Compiler plugins can be broadly categorized based on the phase of compilation th
 \begin{itemize}
   \item \textbf{Frontend Plugins}: These plugins operate during the initial
   stages of compilation, focusing on tasks such as syntax analysis, semantic
-  analysis, and intermediate representation generation. They are useful also for
+  analysis, and \ac{IR} generation. They are useful also for
   implementing custom syntax extensions, enforcing coding standards, or
   performing static code analyzes. For example, in the \emph{Rust} programming
   language, compiler plugins can introduce new syntax extensions and lint
@@ -414,26 +417,72 @@ But how do Kotlin compiler plugins work in general? Before diving into the
 core development of the frontend plugin, it is necessary to understand their
 main structure and how they interact with the Kotlin compiler.
 
-\section{Kotlin Compiler Plugins}
+\section{Kotlin Compiler Plugins} 
+
+Since Kotlin is a multiplatform language, the same source code can be compiled
+into low-level code specific to different targets, such as the JVM, JavaScript,
+and native platforms. In order to work with different targets, the Kotlin
+compiler architecture is divided into two sub-parts: the \emph{frontend} and the
+\emph{backend}\footnote{The following explanation is greatly
+inspired from the work of \cite{moskala2023}, which provides a more
+comprehensive overview of the Kotlin compiler plugins architecture.}.
+%
+The frontend is independent of the target, and for this reason its output can be 
+reused when targeting different platforms. Currently, this part of the compiler 
+is being migrated to the new K2 version, which is supposed to be much more 
+efficient than the previous K1 version.
+%
+The backend, on the other hand, is mostly specific to the target platform, and
+uses the output of the frontend to generate the final code. The backends for
+JVM, JS, Native, and WASM share some parts, that will be analyzed later. The
+general structure is summarized in \cref{fig:kotlin-compiler-architecture}.
 
 \begin{figure}
-    \centering
-    \includegraphics[width=.8\linewidth]{figures/kotlin-compiler-architecture.pdf}
-    \caption{Kotlin compiler architecture. Adapted from the one at \cite{moskala2023}}
-    \label{fig:random-image}
+  \centering
+  \includegraphics[width=.8\linewidth]{figures/kotlin-compiler-architecture.pdf}
+  \caption{Kotlin compiler architecture. Adapted from the one at \cite{moskala2023}}
+  \label{fig:kotlin-compiler-architecture}
 \end{figure}
+
+The frontend is also responsible for communicating with IDEs and build tools, 
+providing APIs to present errors, warnings, code completions and so on. 
+%
+To make this architecture modular, the Kotlin compiler provides a set of 
+\ac{IR}, that the various steps of the workflow
+can use to process the preceding steps' output. Both the frontend and the
+backend creates this data structure, although they are very different. The 
+backend's one is created starting from the output \ac{IR} of the frontend,
+while the frontend's one is created from the Kotlin source code. 
+The general workflow is summarized in \cref{fig:kotlin-compiler-workflow}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\linewidth]{figures/kotlin-compiler-workflow.pdf}
+  \caption{Kotlin compiler general workflow. Adapted and extended from the one
+  at \cite{moskala2023}}
+  \label{fig:kotlin-compiler-workflow}
+\end{figure}
+
+Before the so-called K2 frontend the compiler's frontend worked differently,
+building the \ac{PSI}, a syntactic model of the parsed source code, and the
+\lstinline{BindingContext}, that holds semantic information such as types and
+symbol bindings (represented in \cref{fig:kotlin-compiler-workflow} as a whole). 
+%
+The new K2 frontend, on the other hand, builds the \ac{FIR}, a more powerful and
+complete representation of Kotlin parsed code, capable of offloading some of the
+work that was previously done by the backend and enabling powerful optimizations
+and caching mechanisms. The raw \ac{PSI} is still being produced, but it is now
+transformed into the \emph{raw FIR}, which again transforms in different stages,
+filling the tree with semantic information. Finally, the resolved tree is passed
+to the backend, which takes care of the platform-specific (backend) \ac{IR}, used
+to generate the final code.
+
+
+
+
 
 
 \section{Motivations}
-
-% I suggest referencing stuff as follows: \cref{fig:random-image} or \Cref{fig:random-image}
-
-%\begin{figure}
-%    \centering
-%    \includegraphics[width=.8\linewidth]{figures/random-image.pdf}
-%    \caption{Some random image}
-%    \label{fig:random-image}
-%\end{figure}
 
 
 %----------------------------------------------------------------------------------------
@@ -443,7 +492,7 @@ main structure and how they interact with the Kotlin compiler.
 
 You may also put some code snippet (which is NOT float by default), eg: \cref{lst:random-code}.
 
-\lstinputlisting[float,language=Java,label={lst:random-code}]{listings/HelloWorld.java}
+\lstinputlisting[float, language=Java, label={lst:random-code}]{listings/HelloWorld.java}
 
 \section{Fancy formulas here}
 

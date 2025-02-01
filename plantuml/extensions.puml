@@ -1,0 +1,31 @@
+@startuml extensions
+
+hide empty members
+
+package collektive {
+	class AlignmentComponentRegistrar {
+		+supportsK2: Boolean = true
+		+ExtensionStorage.registerAlignmentComponent(configuration: CompilerConfiguration)
+	}
+
+
+	class AlignmentIrGenerationExtension {
+		+generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext)
+	}
+}
+
+package kotlin {
+	interface IrGenerationExtension {
+		generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext)
+	}
+
+	class CompilerPluginRegistrar {
+		+supportsK2: Boolean
+		+ExtensionStorage.registerExtensions(configuration: CompilerConfiguration)
+	}
+}
+
+AlignmentComponentRegistrar ---|> CompilerPluginRegistrar
+IrGenerationExtension <|--- AlignmentIrGenerationExtension
+AlignmentComponentRegistrar *- AlignmentIrGenerationExtension
+@enduml

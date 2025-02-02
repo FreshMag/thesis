@@ -1,0 +1,26 @@
+@startuml collektive-components
+
+package "Collektive" {
+	component "Gradle plugin" <<KotlinCompilerPluginSupportPlugin>> as GradlePlugin
+	component "AlignmentComponentRegistrar" <<CompilerPlugin>> as AlignmentComponentRegistrar
+	component "AlignmentIrGenerationExtension" <<BackendExtension>> as AlignmentIrGenerationExtension
+	component "CollektiveFrontendExtensionRegistrar" <<FrontendExtension>> as CollektiveFrontendExtensionRegistrar
+	component "Collektive DSL" as CollektiveDsl
+
+	GradlePlugin ..> PLUGIN_ID 
+	PLUGIN_ID ..> AlignmentComponentRegistrar
+
+	AlignmentComponentRegistrar ..> AlignmentIrGenerationExtension : <<uses>>
+	AlignmentComponentRegistrar ..> CollektiveFrontendExtensionRegistrar : <<uses>>
+
+	note top of CollektiveFrontendExtensionRegistrar {
+		The thesis's objective
+	}
+}
+
+component "External Gradle Project" as ExternalProject
+ExternalProject ..> GradlePlugin : <<uses>>
+ExternalProject ..> CollektiveDsl : <<uses>>
+
+
+@enduml

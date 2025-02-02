@@ -555,8 +555,69 @@ in \cref{fig:extensions-class-diagram}.
   \label{fig:extensions-class-diagram}
 \end{figure}
 
+Finally, to include the plugin, a \lstinline{META-INF/services} file is needed,
+where the fully qualified name of the \lstinline{AlignmentComponentRegistrar} is
+written, and the plugin is wrapped in a Gradle plugin that can be applied to the
+project build. After the application of the frontend plugin also, the structure
+of the project's components will be the one described in
+\cref{fig:collektive-components-diagram}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.6\linewidth]{figures/collektive-components.pdf}
+  \caption{Components of the Collektive project after the application of the frontend plugin}
+  \label{fig:collektive-components-diagram}
+\end{figure}
+
 \section{Motivations}
 
+Before diving into the development of the frontend plugin, let's briefly
+summarize the motivations behind the project. As previously mentioned, Aggregate
+computing is still a relatively new paradigm, and some studies
+\cite{DBLP:conf/saso/AudritoDVC16} already pointed out subtle bugs that can
+occur when using some of its possible implementations. 
+%
+Collektive is not an exception and, in this particular case, developing a
+frontend compiler plugin is motivated by three main reasons:
+\begin{enumerate}
+  \item \textbf{The backend plugin}: since a backend plugin is already present
+  and necessary for the correct functioning of the framework, the frontend
+  plugin can just be built on top of it, extending its functionalities and
+  ensuring that the user's operations are safe and within the scope of
+  Collektive DSL correct usage principles.
+  \item \textbf{The presence of an internal DSL}: when building a DSL, a
+  developer must choose to make it \emph{internal} to a host language, like
+  Kotlin, or \emph{external}, like Protelis \cite{DBLP:conf/saso/PianiniBV17},
+  and so take care of the parsing and the compilation process in general.
+  Typically, internal DSLs are easier to use and to develop, but they can also
+  be less flexible and more error-prone, because the developer does not have
+  full control over the parsing process and therefore cannot always enforce the
+  constraints that the DSL should have. This is the case with Collektive, and
+  the frontend plugin can help in this regard.
+  \item \textbf{The integration with the other development tools}: developing a
+  frontend plugin integrates very well with the other tools that are already 
+  used in most projects, for example:
+  \begin{itemize}
+    \item \textbf{IDE}: since the IntelliJ IDEA \ac{IDE} is the most indicated
+    for Kotlin development and it has a very good support for the Kotlin
+    compiler, the frontend plugin can leverage this support to provide real-time
+    feedback for diagnostics and errors it produces, without the need of
+    developing specific \ac{IDE} plugins.
+    \item \textbf{Build tools}: the Gradle plugin that is used to apply the
+    compiler plugin is pretty simple and needs almost zero modifications when
+    extending the compiler plugin, differently from what would happen in the
+    case of Gradle plugins wrapping external tools (e.g. \emph{ktlint}). This
+    means that it can be easily maintained and integrated into other Gradle
+    projects with low effort.
+    \item \textbf{Rest of the pipeline}: the frontend plugin can be developed 
+    very closely to the rest of the Collektive framework through submodules,
+    adding dependencies between subprojects in a very clean and maintainable
+    way.
+  \end{itemize}
+\end{enumerate}
+
+Considering these motivations, we can now proceed with the actual development in
+the next chapter.
 
 %----------------------------------------------------------------------------------------
 \chapter{Contribution}

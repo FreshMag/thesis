@@ -585,30 +585,36 @@ frontend compiler plugin is motivated by three main reasons:
   plugin can just be built on top of it, extending its functionalities and
   ensuring that the user's operations are safe and within the scope of
   Collektive DSL correct usage principles.
+
   \item \textbf{The presence of an internal DSL}: when building a DSL, a
   developer must choose to make it \emph{internal} to a host language, like
   Kotlin, or \emph{external}, like Protelis \cite{DBLP:conf/saso/PianiniBV17},
   and so take care of the parsing and the compilation process in general.
+  %
   Typically, internal DSLs are easier to use and to develop, but they can also
   be less flexible and more error-prone, because the developer does not have
   full control over the parsing process and therefore cannot always enforce the
   constraints that the DSL should have. This is the case with Collektive, and
   the frontend plugin can help in this regard.
+  
   \item \textbf{The integration with the other development tools}: developing a
   frontend plugin integrates very well with the other tools that are already 
   used in most projects, for example:
+
   \begin{itemize}
     \item \textbf{IDE}: since the IntelliJ IDEA \ac{IDE} is the most indicated
     for Kotlin development and it has a very good support for the Kotlin
     compiler, the frontend plugin can leverage this support to provide real-time
     feedback for diagnostics and errors it produces, without the need of
     developing specific \ac{IDE} plugins.
+
     \item \textbf{Build tools}: the Gradle plugin that is used to apply the
     compiler plugin is pretty simple and needs almost zero modifications when
     extending the compiler plugin, differently from what would happen in the
     case of Gradle plugins wrapping external tools (e.g. \emph{ktlint}). This
     means that it can be easily maintained and integrated into other Gradle
     projects with low effort.
+
     \item \textbf{Rest of the pipeline}: the frontend plugin can be developed 
     very closely to the rest of the Collektive framework through submodules,
     adding dependencies between subprojects in a very clean and maintainable
@@ -620,15 +626,55 @@ Considering these motivations, we can now proceed with the actual development in
 the next chapter.
 
 %----------------------------------------------------------------------------------------
-\chapter{Contribution}
+\chapter{Frontend plugin}
 \label{chap:contribution}
 %----------------------------------------------------------------------------------------
 
-You may also put some code snippet (which is NOT float by default), eg: \cref{lst:random-code}.
+In this chapter we will present the development process that lead to the creation of 
+the frontend plugin inside the Collektive project.
 
-\lstinputlisting[float, language=Java, label={lst:random-code}]{listings/HelloWorld.java}
+\paragraph{Structure of this chapter}
 
-\section{Fancy formulas here}
+In this chapter, we will first present the general workflow of the plugin's
+checkers, then we will proceed presenting several \textbf{patterns} that were
+detected observing the Collektive DSL codebase. These patterns represent bad or
+inappropriate use cases of the Collektive DSL that are \textbf{not} captured by 
+default. 
+%
+The way these patterns will be presented does not follow the chronological order 
+of their development, but rather an order with an increasing level of complexity.
+For this purpose, the patterns will be categorized into four main groups, 
+reflecting the design decisions that were taken to approach the related problems,
+highlighting the pros and cons of each approach. 
+
+\section{Workflow}
+
+\section{Patterns}
+
+\subsection{1st approach: direct Kotlin API usage}
+
+\subsubsection{Pattern 1: explicit align/dealign}
+
+\subsection{2nd approach: declarative and modular API}
+
+\subsubsection{Pattern 2: simple aggregate operations in loops}
+
+\subsection{3rd approach: visitor pattern}
+
+\subsubsection{Pattern 3: unnecessary Yielding usage}
+
+\subsubsection{Pattern 4: unnecessary construct usage}
+
+\subsection{4th approach: mixed approach}
+
+\subsubsection{Pattern 5: improper Evolve construct usage}
+
+\subsubsection{Pattern 6: complex aggregate operations in loops}
+
+% TODO delete
+%You may also put some code snippet (which is NOT float by default), eg: \cref{lst:random-code}.
+%\lstinputlisting[float, language=Java, label={lst:random-code}]{listings/HelloWorld.java}
+%\section{Fancy formulas here}
 
 %----------------------------------------------------------------------------------------
 \chapter{Evaluation and Testing}
@@ -636,7 +682,7 @@ You may also put some code snippet (which is NOT float by default), eg: \cref{ls
 %----------------------------------------------------------------------------------------
 
 %----------------------------------------------------------------------------------------
-\chapter{Conclusion and Future works}
+\chapter{Conclusion and future works}
 \label{chap:conclusion}
 %----------------------------------------------------------------------------------------
 

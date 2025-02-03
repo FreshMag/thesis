@@ -695,11 +695,73 @@ From this point on, the workflow of the plugin development will be as follows:
 \end{enumerate}
 
 In this chapter we will present these steps for each pattern except for the step
-2, that will be covered in \cref{chap:evaluation}.
+2, that will be covered in \cref{chap:evaluation}. 
+
+\textbf{Note}: the code snippets that will be presented in the following
+sections, if not appropriately specified in the code, present portions of code
+that are \textbf{inside an Aggregate block}, therefore contained either in a
+function that has the \lstinline{Aggregate} interface as receiver or in a 
+\lstinline{aggregate} entry point block, since these are the places where 
+the Collektive DSL can be used to specify aggregate behaviors. This has been
+done for the sake of brevity and clarity.
 
 \section{1st approach: direct Kotlin API usage}
 
+The API that Kotlin provides to interact with the \ac{FIR} is sufficiently
+powerful to be used to perform a wide range of operations and checks. The
+first approach to the development of the checkers was to use this API directly,
+without the need of any additional constructs or classes. This approach is the
+most direct and simple, but it was used only for the simplest pattern, without a
+very complex logic behind it.
+
 \subsection{Pattern 1: explicit align/dealign}
+
+One of the first pattern detected was the explicit usage of the
+\lstinline{align} and \lstinline{dealign} functions of the Collektive DSL. These
+functions are not supposed to be used directly by the developer because they are
+already managed by the backend plugin, and their direct usage can lead to
+inconsistent behavior and unexpected results. For how the Collektive DSL is
+structured, it was not possible to prevent the usage of these functions directly
+through the API, so the frontend plugin was put in charge of this task.
+
+\subsubsection{Formal description}
+
+Given two functions \lstinline{align} and \lstinline{dealign} available in the
+\lstinline{Aggregate} interface, the pattern is satisfied when any of these
+functions are used explicitly in the code. \Cref{lst:p1-example} shows an
+example of this pattern.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p1-example},
+  caption={Example of Pattern 1 detection in code}
+]{listings/P1Example.kt}
+
+\subsubsection{Design and Implementation}
+
+One of the type of checkers available among \ac{FIR} checkers is the
+\lstinline{FirFunctionCallChecker}, which is just a type alias for a 
+\lstinline{FirExpressionChecker} typed with a \lstinline{FirFunctionCall}. 
+This type of checker can inspect function calls usages, calling the 
+\lstinline{check} method of the checker with a \lstinline{FirFunctionCall}
+as parameter. 
+%
+To performs checks on the function call, we can inspect the properties of this
+parameter. In this case we simply need to \textbf{compare the fully qualified
+name} of the function with the one of the interested functions.
+
+Getting the fully qualified name of the function is not directly supported by
+the \ac{FIR} API, but it is possible to build a simple utility function that
+retrieves it. The final implementation of the checker is shown in
+\cref{lst:p1-checker}: some portions of the code are omitted for brevity.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p1-checker},
+  caption={Implementation of the Pattern 1 checker: \lstinline{ExplicitAlignDealign}}
+]{listings/P1Checker.kt}
 
 \section{2nd approach: declarative and modular API}
 
@@ -716,11 +778,6 @@ In this chapter we will present these steps for each pattern except for the step
 \subsection{Pattern 5: improper Evolve construct usage}
 
 \subsection{Pattern 6: complex aggregate operations in loops}
-
-% TODO delete
-%You may also put some code snippet (which is NOT float by default), eg: \cref{lst:random-code}.
-%\lstinputlisting[float, language=Java, label={lst:random-code}]{listings/HelloWorld.java}
-%\section{Fancy formulas here}
 
 %----------------------------------------------------------------------------------------
 \chapter{Evaluation and Testing}

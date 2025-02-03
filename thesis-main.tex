@@ -647,29 +647,75 @@ For this purpose, the patterns will be categorized into four main groups,
 reflecting the design decisions that were taken to approach the related problems,
 highlighting the pros and cons of each approach. 
 
+\textbf{Note}: the features of the Kotlin compiler explained and shown in
+this chapter are \emph{experimental}, and therefore subject to possible instability
+and frequent changes. The code snippets and examples provided are based on the
+current state of the Kotlin compiler at the time of writing. 
+
 \section{Workflow}
 
-\section{Patterns}
+After defining the \lstinline{CollektiveFrontendExtensionRegistrar} class that
+wraps the frontend plugin, already introduce in \cref{chap:background}, the
+first step is to register the actual extensions to the compiler using the
+\lstinline{configurePlugin} method. For this plugin, the extension that will
+be used is the already cited \lstinline{FirAdditionalCheckersExtension}, which
+allows to register additional checkers to run during compilation.
+%
+This extension can contain an arbitrary number of checkers, each of them
+assigned to different elements of the \ac{FIR} tree (e.g., expressions,
+declarations etc.). All the checkers that will be presented are added 
+through this extension. The final class structure is summarized in
+\cref{fig:frontend-class-diagram}.
 
-\subsection{1st approach: direct Kotlin API usage}
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\linewidth]{figures/frontend-class-diagram.pdf}
+  \caption{Class diagram summarizing the structure of the frontend plugin}
+  \label{fig:frontend-class-diagram}
+\end{figure}
 
-\subsubsection{Pattern 1: explicit align/dealign}
+From this point on, the workflow of the plugin development will be as follows:
 
-\subsection{2nd approach: declarative and modular API}
+\begin{enumerate}
+  \item \textbf{Pattern detection}: when a new pattern that needs to be captured
+  by the plugin is detected, several examples of Collektive programs expecting a
+  positive or negative  diagnostic are written (i.e., respectively, cases in
+  which the diagnostic should be reported and cases where it shouldn't).
+  \item \textbf{Test arrangement}: the examples previously written are used to 
+  create a test suite that will be used as certification of the pattern's correct
+  capture. 
+  \item \textbf{Checker creation and implementation}: a new checker is created and
+  added to the frontend extension, implementing the logic that will detect and 
+  correctly report positives of the pattern's usages.
+  \item \textbf{Adjustments and identification of corner cases (optional)}: during
+  the checker's development some corner cases may arise that need to be handled 
+  by this checker and added as regression tests. In this case, after the corner 
+  cases are correctly identified, this goes back to step 2, working on the already
+  created checker.
+\end{enumerate}
 
-\subsubsection{Pattern 2: simple aggregate operations in loops}
+In this chapter we will present these steps for each pattern except for the step
+2, that will be covered in \cref{chap:evaluation}.
 
-\subsection{3rd approach: visitor pattern}
+\section{1st approach: direct Kotlin API usage}
 
-\subsubsection{Pattern 3: unnecessary Yielding usage}
+\subsection{Pattern 1: explicit align/dealign}
 
-\subsubsection{Pattern 4: unnecessary construct usage}
+\section{2nd approach: declarative and modular API}
 
-\subsection{4th approach: mixed approach}
+\subsection{Pattern 2: simple aggregate operations in loops}
 
-\subsubsection{Pattern 5: improper Evolve construct usage}
+\section{3rd approach: visitor pattern}
 
-\subsubsection{Pattern 6: complex aggregate operations in loops}
+\subsection{Pattern 3: unnecessary Yielding usage}
+
+\subsection{Pattern 4: unnecessary construct usage}
+
+\section{4th approach: mixed approach}
+
+\subsection{Pattern 5: improper Evolve construct usage}
+
+\subsection{Pattern 6: complex aggregate operations in loops}
 
 % TODO delete
 %You may also put some code snippet (which is NOT float by default), eg: \cref{lst:random-code}.

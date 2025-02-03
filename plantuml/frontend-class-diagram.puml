@@ -1,0 +1,39 @@
+@startuml frontend-class-diagram
+
+hide empty members
+
+abstract class FirExtension {
+}
+
+interface FirCheckerWithMppKind {
+}
+
+abstract class FirExtensionRegistrar {
+	+configurePlugin()
+}
+
+abstract class FirAdditionalCheckersExtension extends FirExtension {
+}
+
+class CollektiveExtension extends FirAdditionalCheckersExtension {
+	+FirCheckerWithMppKind[] checkers
+}
+
+class CollektiveFrontendExtensionRegistrar extends FirExtensionRegistrar {
+	+configurePlugin()
+}
+
+abstract class FirExpressionChecker extends FirCheckerWithMppKind {
+	check(expression: E, context: CheckerContext, reporter: DiagnosticReporter)
+}
+
+class CustomExpressionChecker << (O, orange) Singleton >> {
+	check(expression: E, context: CheckerContext, reporter: DiagnosticReporter)
+}
+
+CollektiveFrontendExtensionRegistrar "1" *-- "1" CollektiveExtension
+FirExtensionRegistrar "1" *-- "n" FirExtension
+CollektiveExtension "1" *-- "n" FirCheckerWithMppKind
+CustomExpressionChecker --|> FirExpressionChecker
+
+@enduml

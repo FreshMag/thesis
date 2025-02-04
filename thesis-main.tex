@@ -763,9 +763,88 @@ retrieves it. The final implementation of the checker is shown in
   caption={Implementation of the Pattern 1 checker: \lstinline{ExplicitAlignDealign}}
 ]{listings/P1Checker.kt}
 
+The \lstinline{context} object is an instance of \lstinline{CheckerContext} and is 
+used to provide contextual information to the checker.
+
+The \lstinline{reportOn} method of the \lstinline{reporter} object is used to
+report a diagnostic when the pattern gets detected. The parameter passed to this
+method determine where the diagnostic is gonna be reported (i.e., the position
+in the code) and the message shown to the user (in these checkers, specified
+inside an object called \lstinline{FirCollektiveErrors}).
+
 \section{2nd approach: declarative and modular API}
 
+Even though the API available in the checker is flexible and already powerful, 
+it can be quite verbose even for simple operations like obtaining the fully
+qualified name of a function. To simplify the development of the checkers and
+make them more modular, a small API was developed to make declarative checks 
+on the \ac{FIR} tree. This API is composed of a set of functions with receiver
+that can be used to perform common operations on the \ac{FIR} elements, for 
+example to check if a Checker context is \textbf{inside an Aggregate function 
+or block}. Some of these utilities are shown in \cref{lst:simple-api}.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:simple-api},
+  caption={Some utility functions of the simple API developed}
+]{listings/SimpleApi.kt}
+
+
 \subsection{Pattern 2: simple aggregate operations in loops}
+
+The second pattern that was inspected is the usage of \emph{aggregate operations
+inside loops}. This pattern is more complex because it reflects cases that are
+not always inappropriate usages, but if not properly handled can lead to
+problems during the alignment phase. 
+%
+When an aggregate construct (i.e., a function call that needs alignment between
+devices) is called inside a loop (e.g. a \lstinline{for} loop), the alignment of
+the computation fails because multiple devices are not able to align to the same
+"instance" of the call between the iterations. 
+%
+However, the alignment can succeed if the loop contains a \emph{custom alignment
+operation}, that can be done using the \lstinline{alignedOn} method, which is
+available inside the \lstinline{Aggregate} interface. 
+%
+Again, this behavior cannot be captured through the internal DSL alone, so the
+frontend plugin is needed to handle this case. 
+
+It could seem that this pattern is not overly complex to detect compared to the
+previous one, but in reality just adding one more simple constraint makes the
+range of possible cases that can be captured following this pattern much broader
+and more varied. Consider the case presented in \cref{lst:p2-corner-case}. 
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p2-corner-case},
+  caption={Corner case related to Pattern 2, where the construct is used inside 
+  a nested function}
+]{listings/P2CornerCase.kt}
+Technically, although the construct is "present" inside the loop, it is not
+directly called by the loop itself, but by a nested function. Note that even
+though this can be seen as a corner case, this is valid Kotlin code and might
+appear, maybe as slightly modified versions of this one, in real use cases.
+
+Many more cases regarding this pattern can be found, but some of these will be
+presented as another, separated pattern in \cref{sec:p6}. For now, we will deal
+with the simpler cases, described in the following, more formal description.
+
+\subsubsection{Formal description}
+
+Given a construct that loops through various iterations (e.g., a \lstinline{for}
+statement, a anonymous function called when cycling collection elements like
+\lstinline{map} or \lstinline{forEach} etc.), the pattern is satisfied when an
+aggregate construct is called inside the loop without a wrapping
+\lstinline{alignedOn} operation or as part of a static declaration (e.g., a 
+nested function) whose use is not iterated by the loop.
+
+\subsubsection{Design and Implementation}
+
+The description might still seem incomplete or vague to some extent, and the
+reason is that some potential cases are still not captured. For now, though, the
+developed checker will be able to capture the most common cases, and the rest,
+as we will see, will be easily integrated when covering the Pattern 6. 
 
 \section{3rd approach: visitor pattern}
 
@@ -777,7 +856,7 @@ retrieves it. The final implementation of the checker is shown in
 
 \subsection{Pattern 5: improper Evolve construct usage}
 
-\subsection{Pattern 6: complex aggregate operations in loops}
+\subsection{Pattern 6: complex aggregate operations in loops} \label{sec:p6}
 
 %----------------------------------------------------------------------------------------
 \chapter{Evaluation and Testing}

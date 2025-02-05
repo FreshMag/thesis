@@ -1,0 +1,32 @@
+@startuml p2-flowchart
+start
+:I have a function to check;
+if (Is its name `alignedOn`, `align` or `dealign`?) then (Yes) 
+	stop
+else (No)
+	if (Is the function aggregated?) then (No)
+		stop
+	else (Yes)
+	:Take the list of elements containing the function, sorted from the outer to the inner;
+		if (Do I see a loop?) then (No)
+			stop
+		else (Yes)
+			:Take the elements starting from the end of the list until the first loop;
+			if (In the obtained elements, is there a function declaration?) then (Yes)
+				stop
+			else (No)
+				if (In the obtained elements, is there a call to the function 'aggregate'?) then (Yes)
+					stop
+				else (No)
+					if (In the obtained elements, is there a call to the function 'alignedOn'?) then (Yes)
+						stop
+					else (No)
+						:Pattern detected;
+						stop
+					endif
+				endif
+			endif
+		endif
+	endif
+endif
+@enduml

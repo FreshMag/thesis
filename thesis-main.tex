@@ -801,11 +801,12 @@ problems during the alignment phase.
 When an aggregate construct (i.e., a function call that needs alignment between
 devices) is called inside a loop (e.g. a \lstinline{for} loop), the alignment of
 the computation fails because multiple devices are not able to align to the same
-"instance" of the call between the iterations. 
+``instance'' of the call between the iterations. 
 %
 However, the alignment can succeed if the loop contains a \emph{custom alignment
 operation}, that can be done using the \lstinline{alignedOn} method, which is
-available inside the \lstinline{Aggregate} interface. 
+available inside the \lstinline{Aggregate} interface. This method accepts an
+anonymous function that will be aligned. 
 %
 Again, this behavior cannot be captured through the internal DSL alone, so the
 frontend plugin is needed to handle this case. 
@@ -813,7 +814,7 @@ frontend plugin is needed to handle this case.
 It could seem that this pattern is not overly complex to detect compared to the
 previous one, but in reality just adding one more simple constraint makes the
 range of possible cases that can be captured following this pattern much broader
-and more varied. Consider the case presented in \cref{lst:p2-corner-case}. 
+and more varied. Consider the cases presented in \cref{lst:p2-corner-case}. 
 \lstinputlisting[
   float, 
   language=Kotlin, 
@@ -821,10 +822,21 @@ and more varied. Consider the case presented in \cref{lst:p2-corner-case}.
   caption={Corner case related to Pattern 2, where the construct is used inside 
   a nested function}
 ]{listings/P2CornerCase.kt}
-Technically, although the construct is "present" inside the loop, it is not
-directly called by the loop itself, but by a nested function. Note that even
-though this can be seen as a corner case, this is valid Kotlin code and might
-appear, maybe as slightly modified versions of this one, in real use cases.
+These corner cases are exceptions to the general rule that we previously stated,
+in fact:
+\begin{itemize}
+  \item In the first case, although, technically, the construct is ``present''
+  inside the loop, it is not directly called by the loop itself, but by a nested
+  function. Note that even though this can be seen as a corner case, this is
+  valid Kotlin code and might appear, maybe as slightly modified versions of
+  this one, in real use cases.
+  \item In the second case, we have the required \lstinline{alignedOn}
+  operation, but it is placed outside the loop, making the alignment operation
+  useless.
+  \item In the third case, the loop is done without alignment, but this is in
+  fact correct because the construct is not iterated by the loop since a new 
+  aggregate instance is created at each iteration.
+\end{itemize}
 
 Many more cases regarding this pattern can be found, but some of these will be
 presented as another, separated pattern in \cref{sec:p6}. For now, we will deal
@@ -833,11 +845,12 @@ with the simpler cases, described in the following, more formal description.
 \subsubsection{Formal description}
 
 Given a construct that loops through various iterations (e.g., a \lstinline{for}
-statement, a anonymous function called when cycling collection elements like
-\lstinline{map} or \lstinline{forEach} etc.), the pattern is satisfied when an
-aggregate construct is called inside the loop without a wrapping
-\lstinline{alignedOn} operation or as part of a static declaration (e.g., a 
-nested function) whose use is not iterated by the loop.
+statement, an anonymous function called when cycling collection elements like
+\lstinline{map} or \lstinline{forEach} etc.) \emph{inside} an ``aggregate'' block,
+the pattern is satisfied when an aggregate construct is called inside this loop
+without a wrapping \lstinline{alignedOn} operation \emph{inside the loop} or as
+part of a static declaration (e.g., a nested function) whose use is not iterated
+by the loop.
 
 \subsubsection{Design and Implementation}
 
@@ -845,6 +858,63 @@ The description might still seem incomplete or vague to some extent, and the
 reason is that some potential cases are still not captured. For now, though, the
 developed checker will be able to capture the most common cases, and the rest,
 as we will see, will be easily integrated when covering the Pattern 6. 
+
+One possible way to approach this pattern is reasoning in terms of
+\textbf{containing blocks}: starting from the aggregate function called, we
+could be able to determine if the pattern is detected or not just by looking at
+the \textbf{sorted list of containing blocks of the function call}. Starting
+from there, we first inspect if a loop is, in fact, containing the function
+call, and if so, we check for other elements like the presence of the
+\lstinline{alignedOn} in the correct order. This procedure is summarized in
+\cref{fig:p2-flowchart}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.6\linewidth]{figures/p2-flowchart.pdf}
+  \caption{Flowchart representing the procedure to detect Pattern 2}
+  \label{fig:p2-flowchart}
+\end{figure}
+
+As we can see from the flowchart, the procedure ends immediately if the function
+name is one of \lstinline{alignedOn}, \lstinline{align} or \lstinline{dealign},
+since these are functions that do not require alignment. Thanks to Kotlin 
+nullability system, we can perform these subsequent checks in a declarative way,
+adding utilities to the simple API that we previously introduced and making it 
+more extensible for more checks like this.
+%
+We first add these simple functions shown in \cref{lst:p2-api} to the API, and
+then we can finally implement the checker, as shown in \cref{lst:p2-checker}. 
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p2-api},
+  caption={Utility functions added to help in the detection of Pattern 2}
+]{listings/P2SimpleApi.kt}
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p2-checker},
+  caption={Implementation of the Pattern 2 checker: \lstinline{NoAlignInsideLoop}}
+]{listings/P2Checker.kt}
+
+As we can already see, implementing a checker with this approach has several
+advantages: the code is readable and modular, and the logic is
+declarative and easier to understand. This approach is also extensible and
+can be easily adapted to other patterns that require similar checks.
+%
+This is, however, a very particular case that can be caught simply by looking at
+containing elements. Once the pattern becomes more complex, adding concepts like
+\emph{symbol's usage references} or \emph{structured operations with particular
+requirements}, like nested anonymous calls or simply subsequent statements that
+appear in the code that need to be checked together, this approach quickly
+becomes less effective and more verbose, as it requires a very effective and
+carefully designed API that cover as many cases as possible. 
+%
+It becomes quite clear that covering corner cases and patterns that reflect many
+possible \ac{FIR} trees needs an approach that is more suitable to this kind of
+data structures.
 
 \section{3rd approach: visitor pattern}
 

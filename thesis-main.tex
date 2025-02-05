@@ -933,6 +933,27 @@ data structures.
 \label{chap:evaluation}
 %----------------------------------------------------------------------------------------
 
+When developing tools that need to inspect and modify source code, where
+developers have freedom to write code in many ways and leveraging the full power of the 
+used programming language, a solid and comprehensive testing strategy is crucial to 
+ensure that the tool is working as expected and that it is able to capture all the
+cases that it is supposed to capture.
+%
+If static analysis tools can be tedious to develop, due to the need to cover a
+plethora of possible cases, often with a unified meta-level approach, testing
+static analysis tools must be even more comprehensive and flexible than
+development, trying not to fall into verbosity and repetition.
+
+In this chapter we will present the testing strategy that was adopted to test the 
+Collektive frontend plugin, starting from the initial approaches and moving into the 
+development of an \emph{ad-hoc} testing framework named \emph{Subjekt}.
+
+\section{Initial testing approaches}
+
+\section{Code generation: a small DSL leveraging Kotlin Poet}
+
+\section{Custom testing framework: Subjekt}
+
 %----------------------------------------------------------------------------------------
 \chapter{Conclusion and future works}
 \label{chap:conclusion}

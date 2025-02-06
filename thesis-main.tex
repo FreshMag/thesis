@@ -950,6 +950,122 @@ development of an \emph{ad-hoc} testing framework named \emph{Subjekt}.
 
 \section{Initial testing approaches}
 
+The first approach taken was the most trivial: the tests were written using
+\textbf{static Kotlin sources} as resource files, loading them in the test
+suites written using the Kotlin test framework \textbf{Kotest}. The first
+problem that arose regarded the \emph{compilation process and the check for
+resulting diagnostics}. To test the checkers, in fact, the code must be compiled
+programmatically also providing the plugin to the compiler, and then collect all
+the produced messages and compare them with the expected ones.
+%
+Fortunately, a library already exists for this purpose: \textbf{Kotlin Compile
+Testing} by Thilo Schuchort (tschuchortdev on GitHub)\footnote{The actual
+library that was used is a fork of the original one, maintained by Zac Sweers
+(ZacSweers on GitHub). The switch to the fork was necessary due to some issues
+encountered during the building process of the project with Kotlin 2.0 which,
+at the time of writing, is still not supported by the original library. More
+information is available here:
+\url{https://github.com/tschuchortdev/kotlin-compile-testing/issues/411}}.
+This library provides a simple way to create objects that represent Kotlin source
+files by passing a string source code, and then compile them giving a list of
+compiler plugins or annotation processors that should be used during the
+compilation process. All of this is done \emph{inheriting the class path} of
+where the compilation process is running, so the Collektive plugin can be added
+without any problem also adding the corresponding library. Finally, the
+diagnostics produced are contained inside the
+\lstinline{KotlinCompilation.Result} object as a single string that can be
+easily split and filtered to get the relevant messages and compare them with the
+expected ones.
+
+With this library, it is now possible to write tests simply by reading the
+resource files that contain the source code that should result or not in a
+pattern being detected. These testing cases should be the same that were
+extracted from the codebase during the development of the checkers. An example
+of a test suite using this method can be seen in \cref{lst:initial-test-suite}.
+%
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:initial-test-suite},
+  caption={One of the first developed test for the Pattern 2 checker. It uses
+  static resource files to load the source code to be compiled and checked}
+]{listings/TestingExample1.kt}
+%
+As we can see, the testing process is quite simple and straightforward:
+\lstinline{TestAggregateInLoop.kt} is a source file contained in the resource
+folder and contains a simple source code with an aggregate construct used inside
+a loop, which is the case that should be detected by the checker for Pattern 2.
+
+It appears quite clear however, how this approach soon proves to be un-scalable
+and especially very repetitive, as for the same pattern to be tested there are
+many possible source codes in which the checker might have to operate (and
+therefore cases to be tested) and where the difference with the previous ones
+is, in most cases, a line or two of code. 
+%
+Following this method, the test suite would have needed many static files, each
+very similar to some others, and the Kotest spec would have been very verbose,
+even trying to minimize the repeated parts through the use of Kotest utility
+functions like \lstinline{forAll}.
+
+\section{Template files: utilities to avoid repetitions}
+
+One of the first solutions to the problem of repetition when dealing with
+textual files very similar to each other is to use \textbf{template files}. The
+approach is quite simple: for each pattern to test, collapse all the testing
+cases that are similar to each other into a single file containing placeholders
+for the parts that change. A template file structured like this is shown in
+\cref{lst:template-file}.
+%
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:template-file},
+  caption={A example of the templates created for testing multiple cases at 
+  once}
+]{listings/TestingTemplateFile.kt}
+%
+Then, instead of compiling the string obtained from the
+resource file directly, replace the placeholders cycling through a list of
+possible, hard-coded configurations in the test suite and for each perform the
+correct check on the diagnostics produced.
+%
+In addition, we extract a small utility in order to make the process of reading
+resources, compiling and comparing messages more concise and readable. The
+result looks similar to the one shown in \cref{lst:template-test-suite}. Only a
+relevant part of the test suite is shown, the rest is omitted for brevity.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:template-test-suite},
+  caption={Part of the test for Pattern 2 revised using template files}
+]{listings/TestingExample2.kt}
+
+Even though this approach gained some flexibility and reduced repetitions on the
+template files side, it still requires a lot of boilerplate code to be written
+between each test case. Another step is necessary to make the testing process
+even more concise: integrating the created utility with a string interpolation
+mechanism that allows configurable parts without repeated and obscure code for
+formatting. 
+%
+This allows to write templates that are more clear and readable, because instead
+of writing placeholders with \lstinline{%s} we can write variables with names 
+like \lstinline{%(nameOfTemplateVariable)} and then pass a configurable map 
+through the test code that will replace these variables with the correct values.
+All of these utilities, contained in the singleton object \lstinline{CompileUtils},
+permit writing tests like the ones shown in \cref{lst:template-revised-suite}.
+%
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:template-revised-suite},
+  caption={\Cref{lst:template-test-suite} revised using the new utilities}
+]{listings/TestingExample3.kt}
+%
+It is easy to see how the test not only gained in readability, but it is much
+more scalable and can be used to test many more cases adding only a few lines of
+code. 
+
 \section{Code generation: a small DSL leveraging Kotlin Poet}
 
 \section{Custom testing framework: Subjekt}

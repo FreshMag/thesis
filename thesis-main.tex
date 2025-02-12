@@ -61,7 +61,7 @@ Optional. Max a few lines.
 %----------------------------------------------------------------------------------------
 
 Analyzing characteristics of the source code without necessarily building and
-executing it (i.e., static analysis) is a process that has been studied and
+executing it --- i.e., static analysis --- is a process that has been studied and
 implemented in various forms during the last decades. Various tools have been
 developed to perform such a task, each with its own strengths and weaknesses.
 %
@@ -76,8 +76,8 @@ As the system grows in complexity, so does the variety of errors and
 vulnerabilities that can be detected through tools (e.g., concurrency management
 issues, error handling, etc.). At the same time, adhering to coding standards
 helps to avoid both trivial and non-trivial errors from the outset.
-\note{Here it's not clear that it's talking about the tools for enforce coding standards}
-Additionally, these are among the easiest types of tools to integrate, often
+Many tools exist to enforce these coding standards and to detect violations and,
+moreover, these are usually among the easiest types of tools to integrate, often
 already included within \acp{IDE}.
 %
 The effectiveness of static analysis tools has been the subject of various
@@ -97,14 +97,52 @@ making it a threat \cite{DBLP:books/daglib/0015650}, backed by a solid safety
 net. 
 
 \section{Static Analysis for novel paradigms}
-However, 
-Despite all this, these tools are not always available out-of-the-box, especially in the case of new and experimental language paradigms.
 
-\note{TODO}
+Despite all this, these tools are not always available out-of-the-box,
+especially in the case of new and experimental language paradigms. Developing
+useful static analysis tools means having a \textbf{deep understanding of the
+language} used to write the code, as well as \textbf{knowing the paradigm well
+enough} in order to reason about the main pitfalls and points of failure present
+within it.
+%
+Beyond this, static analysis tools are inherently difficult to develop, as they
+must be exceptionally reliable and robust. They serve as critical foundations
+for software development, and they are among the last places where one would
+want to encounter a bug. Any flaw in these tools can lead to incorrect analysis,
+misguiding developers and potentially introducing severe issues into a codebase.
+%
+Moreover, from a technical standpoint, developing such tools also requires
+building a substantial integration layer with other systems to ensure their
+usability. For instance, they need to seamlessly integrate with \ac{IDE}s, code
+editors, and development pipelines, further increasing the complexity of their
+implementation.
+
+Even considering all of this, the challenge of developing these tools extends
+beyond technical complexity. For a static analysis tool to be created, the
+programming paradigm in question must first reach a sufficient level of
+\textbf{interest} and \textbf{usability} within the software development
+landscape: only then does the need for such a tool become evident. However, the
+growth and adoption of a new paradigm are often inhibited by the very absence of
+these tools, which have become essential in most development contexts. This
+creates a self-perpetuating cycle: without adequate tooling, a paradigm
+struggles to gain traction, yet without widespread adoption, there is little
+incentive to develop the necessary tools.
+%
+As a result, developers and industry stakeholders tend to fall back on
+well-established tools with mature and certified ecosystems, reinforcing the
+dominance of existing paradigms. This, in turn, leads to significant
+\emph{technical debt}, as developers are forced to work within paradigms that
+may not be the most suitable for the problem at hand. Beyond that, this
+situation also causes many promising research projects to remain confined within
+academia, preventing their potential impact on the broader software development
+industry. 
+
+It is clear now that knowing how can this cycle be broken is a key point in 
+the development of new paradigms and tools.
 
 \section{The role of Domain Specific Languages}
 
-\note{TODO}
+
 
 \section{Enabling static analysis through Compiler Plugins}
 

@@ -158,7 +158,28 @@ static analysis tools for them tends to be significantly easier. Their limited
 expressiveness reduces the complexity of the analysis, making it more feasible
 to create robust and effective tooling. 
 
-\note{TODO: explain internal DSLs and their relation with the host language compiler}
+Recently, many new \acp{DSL} have been implemented as \emph{internal} to a host
+language. Internal \acp{DSL} are embedded within a general-purpose language,
+using the host language's syntax and semantics to define the domain-specific
+constructs. This approach offers several advantages, including the ability to
+leverage the host language's ecosystem and tooling, without having to develop a
+compiler from scratch and manage all the necessary checks. 
+%
+Additionally, internal \ac{DSL} users can use already existing libraries
+available for the host language to make their life easier. This approach,
+however, also comes with its disadvantages, the main one being the limitations
+in their expressiveness, as the host language's capabilities can
+\textbf{constrain syntax and semantics}. For this reason, developing internal
+\acp{DSL} could suffer from scalability issues when the lack of full control
+over the language becomes an obstacle to the paradigm reflection in the code.
+Moreover, implementing custom static checks over the code could be difficult
+when the host language does not provide the necessary hooks to do so (i.e., 
+meta-programming capabilities).
+
+In conclusion, even though internal \acp{DSL} can be a solution to the first
+half of the problem --- i.e., the adoption and implementation of the paradigm
+with less technical challenges --- they still suffer from the lack of proper
+tooling for specific static analysis.
 
 \section{Enabling static analysis through Compiler Plugins}
 
@@ -202,11 +223,11 @@ Compiler plugins can be broadly categorized based on the phase of compilation th
 \begin{itemize}
   \item \textbf{Frontend Plugins}: These plugins operate during the initial
   stages of compilation, focusing on tasks such as syntax analysis, semantic
-  analysis, and \ac{IR} generation. They are useful also for
-  implementing custom syntax extensions, enforcing coding standards, or
-  performing static code analyzes. For example, in the \emph{Rust} programming
-  language, compiler plugins can introduce new syntax extensions and lint
-  checks. 
+  analysis, and \ac{IR} generation (i.e., an internal data structure used by the
+  compiler). They are useful also for implementing custom syntax extensions,
+  enforcing coding standards, or performing static code analyzes. For example,
+  in the \emph{Rust} programming language, compiler plugins can introduce new
+  syntax extensions and lint checks. 
 
   \item \textbf{Backend Plugins}: Functioning in the latter stages of
   compilation, backend plugins are concerned with code optimization, machine
@@ -241,8 +262,8 @@ even modify the \ac{AST} of the code being compiled. They are
 commonly used in frameworks and libraries to reduce boilerplate code and enforce
 coding standards.
 %
-Kotlin also supports annotation processors through the \ac{KAPT} — which is, in
-fact, a compiler plugin itself — that allows Kotlin code to interoperate with
+Kotlin also supports annotation processors through the \ac{KAPT} --- which is, in
+fact, a compiler plugin itself --- that allows Kotlin code to interoperate with
 Java annotation processors and, more recently, the \ac{KSP}, another compiler
 plugin introduced as ``an API that you can use to develop lightweight compiler
 plugins''. The former enables developers to leverage existing Java annotation
@@ -257,10 +278,13 @@ functionalities. While Annotation Processors are limited to generating source
 code and performing checks based on annotations, compiler plugins can exploit a
 very powerful API that can create and modify byte-code, elements inside the
 \ac{IR} and more, allowing the developers to solve a whole new class of
-meta-programming problems. Of course, Annotation Processors are typically easier
-to write and maintain than compiler plugins, but this extra cost can be worth in
-several cases, for example in the scenario that will be presented in this
-thesis.
+meta-programming problems. In addition, the use of annotations in the code could
+make it more ``cluttered'' from the perspective of a DSL, reducing it to
+constructs that belong more strictly to the host language, while the compiler
+plugin would not need these annotations. Of course, Annotation Processors are
+typically easier to write and maintain than compiler plugins, but this extra
+cost can be worth in several cases, for example in the scenario that will be
+presented in this thesis.
 
 \subsection{Main challenges and requirements}
 
@@ -276,9 +300,9 @@ chapters. This thesis presents the development process of a frontend compiler
 plugin designed to build upon an existing \textit{backend} plugin. The primary
 purpose of this frontend plugin is to perform static checks on source code,
 ensuring compliance with specific rules related to the functionality of the
-pre-existing backend plugin.
-
-\note{TODO link to the next paragraph}
+pre-existing backend plugin. To better understand the target rules developed
+within this frontend plugin and its context, it is necessary to first introduce 
+the backend plugin and the project it is part of.
 
 \paragraph{Structure of the Thesis}
 

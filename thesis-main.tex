@@ -76,6 +76,7 @@ As the system grows in complexity, so does the variety of errors and
 vulnerabilities that can be detected through tools (e.g., concurrency management
 issues, error handling, etc.). At the same time, adhering to coding standards
 helps to avoid both trivial and non-trivial errors from the outset.
+\note{Here it's not clear that it's talking about the tools for enforce coding standards}
 Additionally, these are among the easiest types of tools to integrate, often
 already included within \acp{IDE}.
 %
@@ -93,7 +94,19 @@ and easier to use, becoming protagonists of many \ac{CI} pipelines
 \cite{DBLP:conf/msr/ZampettiSOCP17} that automatically performs checks on the
 entire source code, embracing change and evolution of the software without
 making it a threat \cite{DBLP:books/daglib/0015650}, backed by a solid safety
-net.
+net. 
+
+\section{Static Analysis for novel paradigms}
+However, 
+Despite all this, these tools are not always available out-of-the-box, especially in the case of new and experimental language paradigms.
+
+\note{TODO}
+
+\section{The role of Domain Specific Languages}
+
+\note{TODO}
+
+\section{Enabling static analysis through Compiler Plugins}
 
 If looked from another perspective, automated static analysis tools and
 compilers share significant similarities in their operations. Both perform
@@ -116,8 +129,6 @@ incorporating specialized capabilities that go beyond the scope of a
 general-purpose environment? These extensions could be designed to address the
 unique requirements of a specific project or domain. This is precisely where
 \textbf{compiler plugins} come into play.
-
-\section{Definition and Purpose of Compiler Plugins}
 
 Compiler plugins are dynamic modules that interact with the compiler during its
 various phases, enabling the introduction of new functionalities or the
@@ -150,7 +161,7 @@ Compiler plugins can be broadly categorized based on the phase of compilation th
   architectures and more.
 \end{itemize}
 
-\subsection{Compiler Plugins in Kotlin}
+\subsubsection{Compiler Plugins in Kotlin}
 
 Kotlin, a statically typed programming language developed by JetBrains, offers
 robust support for compiler plugins, allowing developers to highly customize the
@@ -185,7 +196,7 @@ processors in their Kotlin projects and the latter, on the other hand, provides
 a more efficient and Kotlin-specific way to generate code at compile time,
 offering a new approach that is much more integrated with Kotlin symbols.
 
-\subsection{Compiler Plugins advantages}
+\subsection{Advantages of Compiler Plugins}
 
 Compiler plugins and Annotation Processors, however, have some very distinct
 functionalities. While Annotation Processors are limited to generating source
@@ -197,7 +208,7 @@ to write and maintain than compiler plugins, but this extra cost can be worth in
 several cases, for example in the scenario that will be presented in this
 thesis.
 
-\section{Development of a Frontend Compiler Plugins}
+\subsection{Main challenges and requirements}
 
 At the time of writing, the development of frontend compiler plugins in Kotlin is
 still a relatively less explored area compared to the backend ones. Because of the 
@@ -213,18 +224,7 @@ purpose of this frontend plugin is to perform static checks on source code,
 ensuring compliance with specific rules related to the functionality of the
 pre-existing backend plugin.
 
-\subsection{The importance of Build Tools}
-
-Before proceeding with the explanation of the main structure of this thesis, it
-is important to mention the role of build tools in the development process of a
-compiler plugin. Without a seamless integration of the compiler plugin during
-the compilation process (and, as it will be shown, the testing process as well), the
-development of a compiler plugin would be cumbersome and error-prone. 
-%
-Needless to say, a well-configured build tool is a fundamental requirement in
-this context. Within the Kotlin ecosystem — on which this work focuses — the most
-widely used build tool is \emph{Gradle}, and it will serve as the foundation for
-the implementations discussed in this thesis.
+\note{TODO link to the next paragraph}
 
 \paragraph{Structure of the Thesis}
 
@@ -260,7 +260,7 @@ Computing} \cite{Beal2015} paradigm. This chapter will provide an overview of
 the concepts behind Collektive as well as the feature behind its backend plugin
 and Kotlin compiler plugins development in general.
 
-\section{Aggregate Computing}
+\section{Aggregate Computing: a novel paradigm}
 
 The Aggregate computing paradigm is a novel approach to ``design, create and
 maintain'' \cite{Beal2015} complex distributed systems, particularly in the 
@@ -298,7 +298,7 @@ dynamic checks that can spot subtle bugs and vulnerabilities in the code, by
 focusing on concepts like \textbf{neighborhood interactions} and \textbf{domain
 alignment} \cite{DBLP:conf/saso/AudritoDVC16}.
 
-\subsection{Main aspects}
+\subsection{Applications and critical aspects}
 
 In Aggregate Computing, the main model of the system consists of a \emph{network of 
 intercommunicating devices}, which can be \emph{close} to one another therefore 
@@ -328,7 +328,7 @@ After the previous tools already cited, it is now necessary to
 introduce the Aggregate Computing framework that will be the target of the
 frontend plugin in this thesis: \emph{Collektive}.
 
-\section{Collektive: an Aggregate Computing Framework}
+\section{Collektive: an Aggregate Computing framework}
 
 \emph{Collektive} is a modern Aggregate Computing framework developed in Kotlin 
 that allows developers to easily write Aggregate Computing programs through a 
@@ -417,7 +417,7 @@ But how do Kotlin compiler plugins work in general? Before diving into the
 core development of the frontend plugin, it is necessary to understand their
 main structure and how they interact with the Kotlin compiler.
 
-\section{Kotlin Compiler Plugins} 
+\section{Kotlin Compiler Plugins: general structure} 
 
 Since Kotlin is a multiplatform language, the same source code can be compiled
 into low-level code specific to different targets, such as the JVM, JavaScript,
@@ -444,7 +444,9 @@ general structure is summarized in \cref{fig:kotlin-compiler-architecture}.
   \label{fig:kotlin-compiler-architecture}
 \end{figure}
 
-The frontend is also responsible for communicating with IDEs and build tools, 
+\subsection{Kotlin K2 and frontend plugins}
+
+\sidenote{Fix starting text of this section}The frontend is also responsible for communicating with IDEs and build tools, 
 providing APIs to present errors, warnings, code completions and so on. 
 %
 To make this architecture modular, the Kotlin compiler provides a set of 
@@ -488,7 +490,7 @@ The role of the checkers is particularly important in the context of this
 thesis, and the way it's possible to interact with them is by means of
 \textbf{extensions}.
 
-\subsection{Extensions}
+\subsection{Extension mechanism}
 
 Compiler extensions are mechanisms that allow developers to modify various
 phases of the compilation process, either by analyzing and transforming code at
@@ -569,7 +571,24 @@ of the project's components will be the one described in
   \label{fig:collektive-components-diagram}
 \end{figure}
 
-\section{Motivations}
+\section{DSL and Compiler Plugins}
+
+\note{TODO}
+
+\subsection{The importance of Build Tools}
+
+Before proceeding with the explanation of the main structure of this thesis, it
+is important to mention the role of build tools in the development process of a
+compiler plugin. Without a seamless integration of the compiler plugin during
+the compilation process (and, as it will be shown, the testing process as well), the
+development of a compiler plugin would be cumbersome and error-prone. 
+%
+Needless to say, a well-configured build tool is a fundamental requirement in
+this context. Within the Kotlin ecosystem — on which this work focuses — the most
+widely used build tool is \emph{Gradle}, and it will serve as the foundation for
+the implementations discussed in this thesis.
+
+\subsection{Main motivations}
 
 Before diving into the development of the frontend plugin, let's briefly
 summarize the motivations behind the project. As previously mentioned, Aggregate
@@ -626,7 +645,7 @@ Considering these motivations, we can now proceed with the actual development in
 the next chapter.
 
 %----------------------------------------------------------------------------------------
-\chapter{Frontend plugin}
+\chapter{Frontend plugin development}
 \label{chap:contribution}
 %----------------------------------------------------------------------------------------
 
@@ -652,7 +671,7 @@ this chapter are \emph{experimental}, and therefore subject to possible instabil
 and frequent changes. The code snippets and examples provided are based on the
 current state of the Kotlin compiler at the time of writing. 
 
-\section{Workflow}
+\section{Adopted workflow}
 
 After defining the \lstinline{CollektiveFrontendExtensionRegistrar} class that
 wraps the frontend plugin, already introduce in \cref{chap:background}, the
@@ -1007,13 +1026,19 @@ very similar to some others, and the Kotest spec would have been very verbose,
 even trying to minimize the repeated parts through the use of Kotest utility
 functions like \lstinline{forAll}.
 
-\section{Template files: utilities to avoid repetitions}
+\section{Avoiding repetitions through template files}
 
 One of the first solutions to the problem of repetition when dealing with
 textual files very similar to each other is to use \textbf{template files}. The
 approach is quite simple: for each pattern to test, collapse all the testing
 cases that are similar to each other into a single file containing placeholders
-for the parts that change. A template file structured like this is shown in
+for the parts that change. 
+
+\subsection{Initial template system}
+
+\note{TODO: describe the initial template system}
+
+A template file structured like this is shown in
 \cref{lst:template-file}.
 %
 \lstinputlisting[
@@ -1040,6 +1065,8 @@ relevant part of the test suite is shown, the rest is omitted for brevity.
   label={lst:template-test-suite},
   caption={Part of the test for Pattern 2 revised using template files}
 ]{listings/TestingExample2.kt}
+
+\subsection{Templates flexibility and limitations}
 
 Even though this approach gained some flexibility and reduced repetitions on the
 template files side, it still requires a lot of boilerplate code to be written
@@ -1068,12 +1095,28 @@ code.
 
 \section{Code generation: a small DSL leveraging Kotlin Poet}
 
+\subsection{General structure and usage}
+
+\subsection{Considerations}
+
 \section{Custom testing framework: Subjekt}
 
+\subsection{Main ideas behind the framework}
+
+\subsection{Core structure of Subjekt}
+
+\subsection{Final usage inside tests}
+
 %----------------------------------------------------------------------------------------
-\chapter{Conclusion and future works}
+\chapter{Conclusions}
 \label{chap:conclusion}
 %----------------------------------------------------------------------------------------
+
+\section{Opportunities of Compiler plugins}
+
+\section{Approaching meta-level analysis}
+
+\section{Future works}
 
 %----------------------------------------------------------------------------------------
 % BIBLIOGRAPHY

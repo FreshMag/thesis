@@ -140,7 +140,7 @@ industry.
 It is clear now that knowing how can this cycle be broken is a key point in 
 the development of new paradigms and tools.
 
-\section{The role of Domain Specific Languages}
+\section{The role of Domain Specific Languages} \label{sec:dsls}
 
 When implementing a new paradigm in the form of a programming language,
 \acp{DSL} are often used. A \ac{DSL} is a specialized language designed for a
@@ -349,9 +349,9 @@ about distributed systems in terms of \emph{collective} operations over spatial 
 temporal fields, rather than device-to-device interactions. 
 
 The foundation of aggregate programming is built on \textbf{field calculus}
-\cite{Beal2014TowardsAU}, a set of constructs designed for spatial computing.
-These constructs enable the implementation of robust coordination mechanisms,
-such as self-stabilizing and scalable operations \cite{Viroli2018}
+\cite{Beal2014TowardsAU}, a set of constructs designed for \emph{spatial
+computing}. These constructs enable the implementation of robust coordination
+mechanisms, such as self-stabilizing and scalable operations \cite{Viroli2018}
 \cite{DBLP:journals/jlap/ViroliBDACP19}, which adapt dynamically to changes in
 the environment. Applications of aggregate programming are particularly
 impactful in large-scale scenarios, such as crowd management during public
@@ -511,9 +511,10 @@ is being migrated to the new K2 version, which is supposed to be much more
 efficient than the previous K1 version.
 %
 The backend, on the other hand, is mostly specific to the target platform, and
-uses the output of the frontend to generate the final code. The backends for
-JVM, JS, Native, and WASM share some parts, that will be analyzed later. The
-general structure is summarized in \cref{fig:kotlin-compiler-architecture}.
+uses the output of the frontend to generate the final code. In reality, the
+backends for JVM, JS, Native, and WASM share some parts: that will be analyzed
+later. The general structure is summarized in
+\cref{fig:kotlin-compiler-architecture}.
 
 \begin{figure}
   \centering
@@ -524,11 +525,12 @@ general structure is summarized in \cref{fig:kotlin-compiler-architecture}.
 
 \subsection{Kotlin K2 and frontend plugins}
 
-\sidenote{Fix starting text of this section}The frontend is also responsible for communicating with IDEs and build tools, 
-providing APIs to present errors, warnings, code completions and so on. 
+The frontend's output is not only used by the backend for the final one, but it
+is also responsible for communicating with \acp{IDE} and build tools, providing
+APIs to present errors, warnings, code completions and so on. 
 %
 To make this architecture modular, the Kotlin compiler provides a set of 
-\ac{IR}, that the various steps of the workflow
+\acp{IR}, that the various steps of the workflow
 can use to process the preceding steps' output. Both the frontend and the
 backend creates this data structure, although they are very different. The 
 backend's one is created starting from the output \ac{IR} of the frontend,
@@ -537,13 +539,13 @@ The general workflow is summarized in \cref{fig:kotlin-compiler-workflow}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=.8\linewidth]{figures/kotlin-compiler-workflow.pdf}
+  \includegraphics[width=.9\linewidth]{figures/kotlin-compiler-workflow.pdf}
   \caption{Kotlin compiler general workflow. Adapted and extended from the one
   at \cite{moskala2023}}
   \label{fig:kotlin-compiler-workflow}
 \end{figure}
 
-Before the so-called K2 frontend the compiler's frontend worked differently,
+Before the so-called K2 frontend the compiler's frontend worked by
 building the \ac{PSI}, a syntactic model of the parsed source code, and the
 \lstinline{BindingContext}, that holds semantic information such as types and
 symbol bindings (represented in \cref{fig:kotlin-compiler-workflow} as a whole). 
@@ -570,9 +572,9 @@ thesis, and the way it's possible to interact with them is by means of
 
 \subsection{Extension mechanism}
 
-Compiler extensions are mechanisms that allow developers to modify various
-phases of the compilation process, either by analyzing and transforming code at
-the \ac{FIR} level or by modifying the backend \ac{IR}. These extensions
+Kotlin compiler extensions are mechanisms that allow developers to modify
+various phases of the compilation process, either by analyzing and transforming
+code at the \ac{FIR} level or by modifying the backend \ac{IR}. These extensions
 enable advanced features such as additional type checks, automated code
 generation, and optimizations, empowering Kotlin’s extensibility.
 %
@@ -603,12 +605,8 @@ phase has completed and the \ac{IR} has been generated. It allows modifications
 to the IR tree before it is used for bytecode generation. Because IR sits
 between the frontend and the platform-specific backend, changes made here can
 impact the generated machine code without altering the high-level source
-representation. 
-%
-A key limitation of this extension is that it does not influence code analysis
-in IntelliJ IDEA. Any method or class injected via this extension will not be
-recognized by the IDE, meaning that developers cannot call it directly unless
-they use reflection. This extension is widely used in performance-critical
+representation --- and, for this reason, it does not influence code analysis
+in \acp{IDE} like IntelliJ IDEA. This extension is widely used in performance-critical
 applications. For instance, \emph{Jetpack Compose} leverages it to transform
 composable functions into an optimized internal representation. Similarly,
 \emph{Kotlin Serialization} uses it to generate serialization methods dynamically,
@@ -616,6 +614,8 @@ ensuring they are both efficient and lightweight. However, modifying IR directly
 can introduce breaking changes if not handled carefully. Since IR
 transformations occur at a low level, even minor alterations can lead to
 unintended consequences, making this extension a powerful but complex tool.
+
+\subsubsection{IR generation inside Collektive}
 
 Collektive backend plugin uses the \lstinline{IrGenerationExtension} to perform 
 the operations we already discussed. To register an extension, the developer needs
@@ -651,7 +651,19 @@ of the project's components will be the one described in
 
 \section{DSL and Compiler Plugins}
 
-\note{TODO}
+In relation to what stated in \cref{sec:dsls}, the feature that is missing in
+most \emph{internal} DSLs is the ability to perform static analysis on the code
+that is written, and this is particularly difficult since the developers
+struggle to intervene in the compilation process of the host language.
+%
+Compiler plugins seem perfect for this task since, in the case of Kotlin
+compiler plugins at least, they can greatly influence the compilation process on
+the frontend side and take care of the static analysis of the code. Collektive
+is in fact internal to Kotlin and its main pitfalls --- and the ones of
+Aggregate Computing in general --- which are currently not captured can be
+spotted by a frontend plugin made for the job. 
+
+\note{TODO: conclude this section}
 
 \subsection{The importance of Build Tools}
 

@@ -113,7 +113,7 @@ misguiding developers and potentially introducing severe issues into a codebase.
 %
 Moreover, from a technical standpoint, developing such tools also requires
 building a substantial integration layer with other systems to ensure their
-usability. For instance, they need to seamlessly integrate with \ac{IDE}s, code
+usability. For instance, they need to seamlessly integrate with \acp{IDE}, code
 editors, and development pipelines, further increasing the complexity of their
 implementation.
 
@@ -142,7 +142,23 @@ the development of new paradigms and tools.
 
 \section{The role of Domain Specific Languages}
 
+When implementing a new paradigm in the form of a programming language,
+\acp{DSL} are often used. A \ac{DSL} is a specialized language designed for a
+specific domain, rather than a general-purpose programming language. Since many
+new paradigms do not require extensive general-purpose functionality, \acp{DSL}
+often provide a natural and efficient way to express the paradigm’s core
+concepts.
+%
+One of the key advantages of \acp{DSL} is their ability to bring the target
+domain closer to its usage and manipulation. This often results in a syntax that
+is more intuitive, sometimes even resembling natural language, and encourages a
+more declarative way of writing code. Additionally, because \acp{DSL} are
+inherently more restricted in scope than general-purpose languages, developing
+static analysis tools for them tends to be significantly easier. Their limited
+expressiveness reduces the complexity of the analysis, making it more feasible
+to create robust and effective tooling. 
 
+\note{TODO: explain internal DSLs and their relation with the host language compiler}
 
 \section{Enabling static analysis through Compiler Plugins}
 

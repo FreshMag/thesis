@@ -1,0 +1,34 @@
+@startuml fir-visitors
+
+hide empty members
+
+class FirTree << (O, orange) Singleton >> 
+
+FirTree *-- Element : <<contains>>
+class Element {
+	+name: String,
+	+propertyName: String,
+	+kind: Kind
+}
+
+Element ..> FirElement : <<generates>>
+FirTree ..> FirVisitor : <<generates>>
+FirVisitor ..> FirElement : <<visits>>
+FirVisitorVoid .> FirElement : <<visits>>
+
+interface FirElement {
+	+source: KtSourceElement?
+	+accept(visitor: FirVisitor<R, D>, data: D): R
+	+accept(visitor: FirVisitorVoid)
+}
+
+abstract class FirVisitor<R, D> {
+	+visitElement(element: FirElement, data: D): R
+}
+abstract class FirVisitorVoid {
+	+visitElement(element: FirElement): Unit
+}
+
+
+FirVisitor <|-- FirVisitorVoid
+@enduml

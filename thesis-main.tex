@@ -1047,6 +1047,49 @@ data structures.
 
 \section{3rd approach: visitor pattern}
 
+One of the main design patterns that can be used to traverse a tree-like data 
+structure is the \emph{visitor pattern}. This pattern is particularly useful 
+when the tree structure is complex and the operations that need to be performed
+on it are varied and not easily encapsulated in a single class.
+%
+The visitor pattern well fits the context of the Kotlin \ac{FIR}, since the
+structure resembles the one of the \ac{AST} built by the Kotlin parser. 
+Visitors are naturally used during the compilation process even if we don't
+explicitly define any, since the compiler itself needs to traverse the tree to
+perform the various operations that are needed to compile the code.
+%
+Moreover, Kotlin provides a set of utilities that can be used to implement
+Visitors that fit the developer needs and that can be easily integrated into the
+checkers in order to explore the \ac{FIR} structure behind the
+\lstinline{FirElements} that are passed to the checkers.
+
+Kotlin \ac{FIR} visitors are automatically generated inside the Kotlin compiler 
+code in order to have a specific method for each type of \lstinline{FirElement}
+that can be used to visit that element. All that is left to the developer is to
+choose which type of visitor to extend in order to implement their own:
+
+\begin{itemize}
+  \item \lstinline{FirVisitor<R, D>}: a visitor where each visit method accepts
+a \lstinline{D} parameter that can be used to pass data between the visit calls,
+and a return type \lstinline{R} that can be used to return a result from the 
+visitor.
+  \item \lstinline{FirVisitorVoid}: a visitor where each visit method accepts
+only the element to visit and returns nothing. Under the hood is simple a 
+\lstinline{FirVisitor<Unit, Nothing?>}.
+\end{itemize}
+
+Depending on the specific task assigned to the visitor, the developer will
+choose one of these two types of visitors and extend it into a new class. Their
+structure is summarized in the class diagram of
+\cref{fig:fir-visitors-class-diagram}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{figures/fir-visitors.pdf}
+  \caption{Summarized class diagram of the visitors inside the Kotlin 
+  compiler}
+  \label{fig:fir-visitors-class-diagram}
+\end{figure}
 \subsection{Pattern 3: unnecessary Yielding usage}
 
 \subsection{Pattern 4: unnecessary construct usage}

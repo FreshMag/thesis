@@ -425,7 +425,7 @@ The project is organized in modules, with the main one being the \lstinline{dsl}
 and \lstinline{compiler-plugin}, and is tested using the Alchemist simulator
 \cite{DBLP:journals/jos/PianiniMV13}. 
 
-\subsection{Collektive DSL: main concepts}
+\subsection{Collektive DSL: main concepts} \label{sec:collektive-dsl}
 
 In order to understand how to work on Collektive programs, we first need to
 understand its main usage. Collektive DSL is centered around the
@@ -1090,7 +1090,83 @@ structure is summarized in the class diagram of
   compiler}
   \label{fig:fir-visitors-class-diagram}
 \end{figure}
+
 \subsection{Pattern 3: unnecessary Yielding usage}
+
+Having introduced the visitor pattern, we can now see it in practice having 
+to deal with the next pattern, whose implementation in the checkers exploited
+\ac{FIR} visitors. This pattern regard the \emph{unnecessary usage of the} 
+\lstinline{yielding} \emph{contexts} in the Collektive DSL. 
+%
+The \lstinline{yielding} context is a specific feature inside the Collektive
+\ac{DSL}, briefly introduced in \cref{sec:collektive-dsl}, that allows the
+developer to call a construct of the \ac{DSL}, like \lstinline{exchange} for
+instance, returning a value different from the result of the construct. To use
+this feature, instead of using the actual construct, the variant with the
+\lstinline{-ing} suffix is used, like \lstinline{exchanging} in this case
+called \textbf{yielding operations}. 
+%
+Essentially, a \lstinline{YieldingContext<Initial, Return>} is used inside
+yielding operations to act on an \lstinline{Initial} value --- that can, for
+example, be exchanged with neighbors --- but \textbf{return a different value of
+type} \lstinline{Return} to the caller, without having to return the same value
+as for the normal version.
+
+In \cref{lst:p3-yielding-example} we can see an example of the usage of this
+yielding context, taken from the Collektive documentation. 
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p3-yielding-example},
+  caption={Example of usage of the yielding context in the Collektive DSL, 
+  taken from the Collektive documentation}
+]{listings/P3YieldingExample.kt}
+
+In the example provided, the \lstinline{exchanging} construct will still perform
+like the normal \lstinline{exchange} construct, which sends the results from the
+evaluation of the passed function to other devices and returns an object of type
+\lstinline{Field<Int, Int>}, but the entire operation will return another object
+of type \lstinline{Field<Int, String>}, resulted from the \lstinline{map} call
+inside the yielding action.
+
+As it may have been guessed, the usage of this feature can be redundant: nothing
+prevents the developer from using this construct and return the same value as the
+one been computed and sent to the other devices by the construct, resulting in a 
+completely useless \lstinline{yielding} that could be safely substituted with the
+normal version of the construct. 
+%
+An example of this Pattern is shown in \cref{lst:p3-example}.
+
+\lstinputlisting[ float, 
+  language=Kotlin, 
+  label={lst:p3-example},
+  caption={Example of Pattern 3 detection in code, with an unecessary usage of a
+  yielding context, this time with the \lstinline{sharing} construct}
+]{listings/P3Example.kt}
+
+\subsubsection{Formal description}
+
+Given a Collektive construct that accepts a \lstinline{YieldingContext} as
+parameter (e.g., \lstinline{exchanging}, \lstinline{evolving}, etc.), the
+pattern is satisfied when the expression returned inside the anonymous function
+passed as parameter to the \lstinline{yielding} call is \emph{equivalent} to the
+one used as its \emph{receiver}. 
+
+\subsubsection{Design and Implementation}
+
+As previously introduced, this Pattern's checker will be based on the Visitor
+pattern. The checker can simply perform an initial check on the function name to
+intercept a Collektive construct that accepts a \lstinline{YieldingContext},
+based on a set of predefined, fully-qualified names. 
+%
+Once one of these constructs is found, the checker will delegate the inspection
+of the anonymous function to the implemented visitor, that will traverse the
+small part of the \ac{FIR} tree that is contained within the construct's
+parameters.
+%
+Finally, the visitor will return a boolean value used to report the successful
+or unsuccessful detection of the pattern.
 
 \subsection{Pattern 4: unnecessary construct usage}
 

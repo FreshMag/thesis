@@ -8,7 +8,7 @@
 
 \school{\unibo}
 \programme{Corso di Laurea Magistrale in Ingegneria e Scienze Informatiche}
-\title{Development Process of a Compiler Plugin for Aggregate Computing}
+\title{Static Analysis for Novel Programming paradigms via Compiler Plugins}
 \author{Francesco Magnani}
 \date{\today}
 \subject{Software Process Engineering}
@@ -31,6 +31,7 @@
 \acrodef{IR}{Intermediate Representation}
 \acrodef{FIR}{Frontend Intermediate Representation}
 \acrodef{PSI}{Programming Structure Interface}
+\acrodef{TDD}{Test-Driven Development}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -615,7 +616,7 @@ can introduce breaking changes if not handled carefully. Since IR
 transformations occur at a low level, even minor alterations can lead to
 unintended consequences, making this extension a powerful but complex tool.
 
-\subsubsection{IR generation inside Collektive}
+\subsubsection{IR generation inside Collektive} \label{sec:ir-generation-collektive}
 
 Collektive backend plugin uses the \lstinline{IrGenerationExtension} to perform 
 the operations we already discussed. To register an extension, the developer needs
@@ -663,20 +664,21 @@ is in fact internal to Kotlin and its main pitfalls --- and the ones of
 Aggregate Computing in general --- which are currently not captured can be
 spotted by a frontend plugin made for the job. 
 
-\note{TODO: conclude this section}
+In other words, the frontend plugin can take care of the ``other half of the 
+problem'' introduced in \cref{sec:dsls}.
 
 \subsection{The importance of Build Tools}
 
-Before proceeding with the explanation of the main structure of this thesis, it
-is important to mention the role of build tools in the development process of a
-compiler plugin. Without a seamless integration of the compiler plugin during
-the compilation process (and, as it will be shown, the testing process as well), the
-development of a compiler plugin would be cumbersome and error-prone. 
+Considering all of this, it is important to mention the role of build tools in
+the development process of a compiler plugin. Without a seamless integration of
+the compiler plugin during the compilation process (and, as it will be shown,
+the testing process as well), the development of a compiler plugin would be
+cumbersome and error-prone. 
 %
 Needless to say, a well-configured build tool is a fundamental requirement in
-this context. Within the Kotlin ecosystem — on which this work focuses — the most
-widely used build tool is \emph{Gradle}, and it will serve as the foundation for
-the implementations discussed in this thesis.
+this context. Within the Kotlin ecosystem --- on which this work focuses --- the
+most widely used build tool is \emph{Gradle}, and it will serve as the
+foundation for the implementations discussed in this thesis.
 
 \subsection{Main motivations}
 
@@ -691,7 +693,7 @@ frontend compiler plugin is motivated by three main reasons:
 \begin{enumerate}
   \item \textbf{The backend plugin}: since a backend plugin is already present
   and necessary for the correct functioning of the framework, the frontend
-  plugin can just be built on top of it, extending its functionalities and
+  plugin can be simply built on top of it, extending its functionalities and
   ensuring that the user's operations are safe and within the scope of
   Collektive DSL correct usage principles.
 
@@ -700,11 +702,11 @@ frontend compiler plugin is motivated by three main reasons:
   Kotlin, or \emph{external}, like Protelis \cite{DBLP:conf/saso/PianiniBV17},
   and so take care of the parsing and the compilation process in general.
   %
-  Typically, internal DSLs are easier to use and to develop, but they can also
-  be less flexible and more error-prone, because the developer does not have
-  full control over the parsing process and therefore cannot always enforce the
-  constraints that the DSL should have. This is the case with Collektive, and
-  the frontend plugin can help in this regard.
+  As already said, internal \acp{DSL} are typically easier to use and to
+  develop, but they can also be less flexible and more error-prone, because the
+  developer does not have full control over the parsing process and therefore
+  cannot always enforce the constraints that the DSL should have. This is the
+  case with Collektive, and the frontend plugin can help in this regard.
   
   \item \textbf{The integration with the other development tools}: developing a
   frontend plugin integrates very well with the other tools that are already 
@@ -764,7 +766,7 @@ current state of the Kotlin compiler at the time of writing.
 \section{Adopted workflow}
 
 After defining the \lstinline{CollektiveFrontendExtensionRegistrar} class that
-wraps the frontend plugin, already introduce in \cref{chap:background}, the
+wraps the frontend plugin, already introduce in \cref{sec:ir-generation-collektive}, the
 first step is to register the actual extensions to the compiler using the
 \lstinline{configurePlugin} method. For this plugin, the extension that will
 be used is the already cited \lstinline{FirAdditionalCheckersExtension}, which
@@ -792,7 +794,7 @@ From this point on, the workflow of the plugin development will be as follows:
   which the diagnostic should be reported and cases where it shouldn't).
   \item \textbf{Test arrangement}: the examples previously written are used to 
   create a test suite that will be used as certification of the pattern's correct
-  capture. 
+  capture., following a \ac{TDD} approach.
   \item \textbf{Checker creation and implementation}: a new checker is created and
   added to the frontend extension, implementing the logic that will detect and 
   correctly report positives of the pattern's usages.
@@ -850,11 +852,12 @@ example of this pattern.
 \subsubsection{Design and Implementation}
 
 One of the type of checkers available among \ac{FIR} checkers is the
-\lstinline{FirFunctionCallChecker}, which is just a type alias for a 
-\lstinline{FirExpressionChecker} typed with a \lstinline{FirFunctionCall}. 
-This type of checker can inspect function calls usages, calling the 
-\lstinline{check} method of the checker with a \lstinline{FirFunctionCall}
-as parameter. 
+\lstinline{FirFunctionCallChecker}, which is just a type alias for a
+\lstinline{FirExpressionChecker} --- that is, a checker that takes care of
+expressions in the code --- typed with a \lstinline{FirFunctionCall} --- i.e.,
+an element of the \ac{FIR} tree representing a function call in the code. This
+type of checker can inspect function calls usages, calling the \lstinline{check}
+method of the checker with a \lstinline{FirFunctionCall} as parameter. 
 %
 To performs checks on the function call, we can inspect the properties of this
 parameter. In this case we simply need to \textbf{compare the fully qualified
@@ -883,14 +886,15 @@ inside an object called \lstinline{FirCollektiveErrors}).
 
 \section{2nd approach: declarative and modular API}
 
-Even though the API available in the checker is flexible and already powerful, 
-it can be quite verbose even for simple operations like obtaining the fully
-qualified name of a function. To simplify the development of the checkers and
-make them more modular, a small API was developed to make declarative checks 
-on the \ac{FIR} tree. This API is composed of a set of functions with receiver
-that can be used to perform common operations on the \ac{FIR} elements, for 
-example to check if a Checker context is \textbf{inside an Aggregate function 
-or block}. Some of these utilities are shown in \cref{lst:simple-api}.
+Even though the API available in the checker is flexible and already powerful,
+it can be quite verbose if we need to implement utilities even for simple
+operations like obtaining the fully qualified name of a function. To simplify
+the development of the checkers and make them more modular, a small API was
+developed to make declarative checks on the \ac{FIR} tree. This API is composed
+of a set of functions with receiver that can be used to perform common
+operations on the \ac{FIR} elements, for example to check if a Checker context
+is \textbf{inside an Aggregate function or block}. Some of these utilities are
+shown in \cref{lst:simple-api}.
 
 \lstinputlisting[
   float, 
@@ -899,6 +903,17 @@ or block}. Some of these utilities are shown in \cref{lst:simple-api}.
   caption={Some utility functions of the simple API developed}
 ]{listings/SimpleApi.kt}
 
+As we can see, we can perform checks on the \ac{FIR} tree using built-in methods
+like \lstinline{containingElements}: we can use this method to check if a
+\lstinline{FirElement} is contained inside a function that has a \emph{receiver
+parameter} of a certain type, in this case the \lstinline{Aggregate} type, by
+inspecting the name of the \emph{Class-like Symbol} (i.e., the symbol referred
+to a class or similar entities like interfaces) to which it is related. 
+%
+Encapsulating this not really trivial operations in functions makes them still
+reusable and declarative in the context of domain-specific checkers like the
+ones we are developing. This greatly empowers the Kotlin \ac{FIR} API, making it
+more interesting also for more complex cases that will be presented later.
 
 \subsection{Pattern 2: simple aggregate operations in loops}
 
@@ -915,7 +930,7 @@ the computation fails because multiple devices are not able to align to the same
 However, the alignment can succeed if the loop contains a \emph{custom alignment
 operation}, that can be done using the \lstinline{alignedOn} method, which is
 available inside the \lstinline{Aggregate} interface. This method accepts an
-anonymous function that will be aligned. 
+anonymous function that will be the subject of the alignment. 
 %
 Again, this behavior cannot be captured through the internal DSL alone, so the
 frontend plugin is needed to handle this case. 
@@ -939,12 +954,13 @@ in fact:
   function. Note that even though this can be seen as a corner case, this is
   valid Kotlin code and might appear, maybe as slightly modified versions of
   this one, in real use cases.
-  \item In the second case, we have the required \lstinline{alignedOn}
-  operation, but it is placed outside the loop, making the alignment operation
-  useless.
+  \item In the second case, we have the required \lstinline{alignedOn} operation
+  wrapping the Aggregate function call, but it is placed outside the loop,
+  making the alignment operation useless.
   \item In the third case, the loop is done without alignment, but this is in
-  fact correct because the construct is not iterated by the loop since a new 
-  aggregate instance is created at each iteration.
+  fact correct because the construct is not iterated by the loop since a new
+  aggregate instance is created at each iteration. This makes each of them
+  like a separate Aggregate program, and the alignment is not necessary.
 \end{itemize}
 
 Many more cases regarding this pattern can be found, but some of these will be
@@ -955,11 +971,15 @@ with the simpler cases, described in the following, more formal description.
 
 Given a construct that loops through various iterations (e.g., a \lstinline{for}
 statement, an anonymous function called when cycling collection elements like
-\lstinline{map} or \lstinline{forEach} etc.) \emph{inside} an ``aggregate'' block,
-the pattern is satisfied when an aggregate construct is called inside this loop
-without a wrapping \lstinline{alignedOn} operation \emph{inside the loop} or as
-part of a static declaration (e.g., a nested function) whose use is not iterated
-by the loop.
+\lstinline{map}, \lstinline{forEach} etc.) \emph{inside} an ``aggregate'' block,
+the pattern is satisfied when an aggregate construct is used under one of the
+following conditions:
+\begin{enumerate}
+  \item The construct is called inside this loop without a wrapping
+  \lstinline{alignedOn} operation \emph{inside the loop} as well;
+  \item The construct is called inside this loop as part of a static declaration
+  (e.g., a nested function) whose use is not iterated by the loop.
+\end{enumerate}
 
 \subsubsection{Design and Implementation}
 

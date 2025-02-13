@@ -11,7 +11,7 @@ else (No)
 		if (Do I see a loop?) then (No)
 			stop
 		else (Yes)
-			:Take the elements starting from the end of the list until the first loop;
+			:Take the elements starting from the end of the list until the first loop (not included);
 			if (In the obtained elements, is there a function declaration?) then (Yes)
 				stop
 			else (No)

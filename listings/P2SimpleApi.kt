@@ -5,7 +5,7 @@ fun CheckerContext.wrappingElementsUntil(
 	return containingElements
 			.takeIf { it.any(predicate) }
 			// ...
-			?.dropLast(1)
+			?.dropLast(1) // the element itself
 			?.takeLastWhile { !predicate(it) }
 }
 
@@ -15,7 +15,7 @@ fun List<FirElement>.discardIfFunctionDeclaration(): List<FirElement>? =
 fun List<FirElement>.discardIfOutsideAggregateEntryPoint(): List<FirElement>? =
 	takeIf { it.none(isFunctionCallsWithName("aggregate")) }
 
-fun isFunctionCallsWithName(name: String): ((FirElement) -> Boolean) = {
+fun isFunctionCallWithName(name: String): ((FirElement) -> Boolean) = {
 	it is FirFunctionCall && it.functionName() == name
 }
 

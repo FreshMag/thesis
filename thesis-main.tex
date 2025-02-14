@@ -1226,6 +1226,91 @@ approach more complex cases with the visitor pattern.
 
 \subsection{Pattern 4: unnecessary construct usage}
 
+In order to prove the effectiveness of the visitor pattern in more complex cases,
+we will now present a more complex pattern that can be detected using this
+approach. This pattern regards the \emph{unnecessary usage of constructs} in the
+Collektive DSL.
+
+Kotlin compiler won't, by default, warn the developer when an anonymous function
+that can have one or more parameters is created without using them in the body 
+(and maybe passed to another function as a parameter). For example in the code
+shown in the following snippet:
+
+\begin{lstlisting}[language=Kotlin]
+listOf(1, 2, 3).map { 5 }
+\end{lstlisting}
+
+The anonymous function passed to the \lstinline{map} function is not using the
+\lstinline{it} parameter and, in general, this cannot always be interpreted as
+an error because, depending on the function, the parameter might not be needed.
+%
+Some Collektive constructs, however, are designed to work with the parameters of
+these anonymous functions, and the absence of these parameters could be a sign
+of misinterpretation of the construct's behavior and intended usage as well as 
+an unnecessary network exchange that results in a waste of resources.
+
+Not all constructs behave in the same way: for example, the
+\lstinline{neighboring} and \lstinline{neighboringViaExchange} constructs are
+different from the rest. Since these two functions evaluate expressions in
+neighbors devices, if the expression to evaluate is provided as an anonymous
+function, this does not accept parameters. In this case, the construct usage is
+considered unnecessary if the anonymous function has an \emph{empty return} ---
+i.e., a return of type \lstinline{Unit}. 
+%
+An example of both the cases is shown in \cref{lst:p4-example}.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p4-example},
+  caption={Examples of Pattern 4 detection in code, with both the cases described}
+]{listings/P4Example.kt}
+
+\subsubsection{Formal description}
+
+Given a Collektive construct that accepts an anonymous function as parameter,
+the pattern is satisfied when the body of the anonymous function does not use the
+parameters that its signature accepts \emph{or} when the body of the anonymous
+function returns \lstinline{Unit} in absence of accepted parameters (i.e., the
+\lstinline{neighboring} and \lstinline{neighboringViaExchange} constructs).
+
+\subsubsection{Design and Implementation}
+
+Similarly to the previous pattern, the checker will be implemented with a very
+simple logic, exploiting more complex visitors to inspect the pattern matching.
+In this case, the checker will simply check if a function call is one of the 
+Collektive constructs to check. If so, it will delegate the inspection on one
+of two visitors, whether the construct is one of the constructs that accept
+anonymous functions with parameters or not.
+
+The implementation is summarized in \cref{lst:p4-checker}. As we can see, the
+two visitors are \lstinline{EmptyReturnVisitor} and
+\lstinline{ConstructCallVisitor}. The former is quite simple to implement (and,
+therefore, will be explained without code): it behaves like a default
+visitor, but when visiting a \lstinline{FirReturnExpression} element, it checks
+if the return type is \lstinline{FirUnitExpression}. If so, the pattern is
+detected.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p4-checker},
+  caption={Implementation of the Pattern 4 checker: 
+  \lstinline{UnnecessaryUseOfConstructs}}
+]{listings/P4Checker.kt}
+
+The second visitor is more complex: when checking for usages of parameters, we
+\textbf{cannot simply check the return expression of the anonymous function} and
+see if it uses the parameters, because the parameters can be used in other
+expressions to create \textbf{dependent symbols} --- i.e., symbols that depend
+on and can be used instead of the parameters in the return expression.
+%
+To solve this problem in a more simple way, the visitor will \textbf{not} check
+if the dependent symbols are used in the return expression, therefore
+implementing a \emph{symbol marking} system, but instead it will simply consider
+the pattern as detected once it sees at least one usage of the parameter inside
+the anonymous function body.  
+
 \section{4th approach: mixed approach}
 
 \subsection{Pattern 5: improper Evolve construct usage}

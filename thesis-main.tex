@@ -1074,7 +1074,7 @@ a \lstinline{D} parameter that can be used to pass data between the visit calls,
 and a return type \lstinline{R} that can be used to return a result from the 
 visitor.
   \item \lstinline{FirVisitorVoid}: a visitor where each visit method accepts
-only the element to visit and returns nothing. Under the hood is simple a 
+only the element to visit and returns nothing. Under the hood is simply a 
 \lstinline{FirVisitor<Unit, Nothing?>}.
 \end{itemize}
 
@@ -1103,8 +1103,8 @@ The \lstinline{yielding} context is a specific feature inside the Collektive
 developer to call a construct of the \ac{DSL}, like \lstinline{exchange} for
 instance, returning a value different from the result of the construct. To use
 this feature, instead of using the actual construct, the variant with the
-\lstinline{-ing} suffix is used, like \lstinline{exchanging} in this case
-called \textbf{yielding operations}. 
+\lstinline{-ing} suffix is used, like \lstinline{exchanging} in this case, and
+these variants are called called \textbf{yielding operations}. 
 %
 Essentially, a \lstinline{YieldingContext<Initial, Return>} is used inside
 yielding operations to act on an \lstinline{Initial} value --- that can, for
@@ -1138,7 +1138,8 @@ normal version of the construct.
 %
 An example of this Pattern is shown in \cref{lst:p3-example}.
 
-\lstinputlisting[ float, 
+\lstinputlisting[
+  float, 
   language=Kotlin, 
   label={lst:p3-example},
   caption={Example of Pattern 3 detection in code, with an unecessary usage of a
@@ -1151,7 +1152,8 @@ Given a Collektive construct that accepts a \lstinline{YieldingContext} as
 parameter (e.g., \lstinline{exchanging}, \lstinline{evolving}, etc.), the
 pattern is satisfied when the expression returned inside the anonymous function
 passed as parameter to the \lstinline{yielding} call is \emph{equivalent} to the
-one used as its \emph{receiver}. 
+one used as its \emph{receiver}, therefore resulting in a redundant usage of the
+yielding context. 
 
 \subsubsection{Design and Implementation}
 
@@ -1163,10 +1165,64 @@ based on a set of predefined, fully-qualified names.
 Once one of these constructs is found, the checker will delegate the inspection
 of the anonymous function to the implemented visitor, that will traverse the
 small part of the \ac{FIR} tree that is contained within the construct's
-parameters.
+parameters (i.e., the anonymous function passed as parameter to the construct)
 %
 Finally, the visitor will return a boolean value used to report the successful
 or unsuccessful detection of the pattern.
+
+The implementation of the checker can be seen in \cref{lst:p3-checker}. The core
+part is, of course, the visitor method call
+\lstinline{containsUnnecessaryYielding}, whose implementation will be briefly
+discussed in the following.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p3-checker},
+  caption={Implementation of the Pattern 3 checker: \lstinline{UnnecessaryYielding}}
+]{listings/P3Checker.kt}
+
+\subsubsection{Visitor implementation}
+
+To check if a function call corresponding to a construct with a yielding context
+matches the pattern, we need to inspect the anonymous function that is passed as
+parameter. When the visitor encounters a function call to the
+\lstinline{yielding} operation, it will simply save the \textbf{explicit
+receiver} of the call and then visit the anonymous function that is passed as
+parameter to \lstinline{yielding}.
+%
+When visiting a \emph{return expression} of the anonymous function
+passed to the yielding construct, the visitor will check if the expression is
+\emph{equivalent} to the saved receiver of the yielding construct.
+%
+If so, the visitor will return \lstinline{true}, meaning that the pattern is
+detected, otherwise it will return \lstinline{false}. 
+
+A behavior like this can be easily implemented using the
+\lstinline{FirVisitorVoid} class: the \cref{lst:p3-visitor} summarizes the visitor's
+implementation.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p3-visitor},
+  caption={Implementation of the Pattern 3 Visitor}
+]{listings/P3Visitor.kt}
+
+The function \lstinline{isStructurallyEquivalentTo} is a utility function that
+uses Kotlin \emph{expression rendering} to check if two expressions are 
+equivalent. For brevity purposes, its implementation is omitted.
+%
+The function \lstinline{containsUnnecessaryYielding} is also omitted, but its
+implementation is a simple as calling the visiting methods and return a boolean
+variable set during the exploration.
+
+It appears quite clear how a visitor approach to this task is very effective and
+limited in complexity compared to using the \ac{FIR} API on the elements
+directly. However, this still represents a very simple case, often solved by
+common static analysis checks for programming languages in similar situations
+(e.g., same expression on both sides of an assignment). Let's see how to 
+approach more complex cases with the visitor pattern.
 
 \subsection{Pattern 4: unnecessary construct usage}
 

@@ -1311,6 +1311,18 @@ implementing a \emph{symbol marking} system, but instead it will simply consider
 the pattern as detected once it sees at least one usage of the parameter inside
 the anonymous function body.  
 
+The implementation of the \lstinline{ConstructCallVisitor} is shown in
+\cref{lst:p4-visitor}. The variable \lstinline{found} will be set to \lstinline{true}
+when the visitor encounters a usage of all parameters, meaning that the pattern is
+detected when \lstinline{!found}.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p4-visitor},
+  caption={Implementation of the Pattern 4 Visitor}
+]{listings/P4Visitor.kt}
+
 \section{4th approach: mixed approach}
 
 \subsection{Pattern 5: improper Evolve construct usage}

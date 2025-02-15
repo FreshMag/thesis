@@ -915,7 +915,7 @@ reusable and declarative in the context of domain-specific checkers like the
 ones we are developing. This greatly empowers the Kotlin \ac{FIR} API, making it
 more interesting also for more complex cases that will be presented later.
 
-\subsection{Pattern 2: simple aggregate operations in loops}
+\subsection{Pattern 2: simple aggregate operations in loops} \label{sec:p2}
 
 The second pattern that was inspected is the usage of \emph{aggregate operations
 inside loops}. This pattern is more complex because it reflects cases that are
@@ -964,7 +964,7 @@ in fact:
 \end{itemize}
 
 Many more cases regarding this pattern can be found, but some of these will be
-presented as another, separated pattern in \cref{sec:p6}. For now, we will deal
+presented as another, separated pattern in \cref{sec:p5}. For now, we will deal
 with the simpler cases, described in the following, more formal description.
 
 \subsubsection{Formal description}
@@ -986,7 +986,7 @@ following conditions:
 The description might still seem incomplete or vague to some extent, and the
 reason is that some potential cases are still not captured. For now, though, the
 developed checker will be able to capture the most common cases, and the rest,
-as we will see, will be easily integrated when covering the Pattern 6. 
+as we will see, will be easily integrated when covering the Pattern 5. 
 
 One possible way to approach this pattern is reasoning in terms of
 \textbf{containing blocks}: starting from the aggregate function called, we
@@ -1312,9 +1312,10 @@ the pattern as detected once it sees at least one usage of the parameter inside
 the anonymous function body.  
 
 The implementation of the \lstinline{ConstructCallVisitor} is shown in
-\cref{lst:p4-visitor}. The variable \lstinline{found} will be set to \lstinline{true}
-when the visitor encounters a usage of all parameters, meaning that the pattern is
-detected when \lstinline{!found}.
+\cref{lst:p4-visitor}. The variable \lstinline{found} will be set to
+\lstinline{true} when the visitor encounters a usage of all parameters, meaning
+that the pattern is detected when \lstinline{!found}. This is the result
+obtained by the visitor calling its utility method shown in the checker. 
 
 \lstinputlisting[
   float, 
@@ -1323,11 +1324,45 @@ detected when \lstinline{!found}.
   caption={Implementation of the Pattern 4 Visitor}
 ]{listings/P4Visitor.kt}
 
+The visitor approach works very well also in this case: the code is sufficiently
+readable and simple to understand. Even though the logic is more complex
+compared to the previous cases, however, we are not yet dealing with patterns
+that require to visit \textbf{more distant elements} in the \ac{FIR} tree, for
+example \emph{visiting the function declaration of a function call} or
+\emph{linking the usage of a symbol to its declaration}. 
+
+Despite these considerations, it is already possible to see some drawbacks of
+this approach: the code is already becoming less declarative, having to use
+\emph{flags} to keep track of the state of the visitor for example preventing
+some visit methods to be called in contexts we don't want them to be called
+(e.g., in the visitor just presented, the case of nested anonymous functions). 
+
 \section{4th approach: mixed approach}
 
-\subsection{Pattern 5: improper Evolve construct usage}
+In order to avoid the possible pitfalls of the visitor pattern that would make
+this approach less scalable to the increasing complexity of the pattern, we can
+use a mixed approach that combines the visitor pattern with the simple API we
+previously introduced. The main advantage over other static analysis tools, in
+fact, is that the tree we are visiting is already enriched with a lot of
+information that the visitor can use inside its visit methods to perform checks,
+therefore avoiding the need to visit the tree in a more complex way.
+%
+We can also create utility functions that call other visitors to extract
+information useful for the checker or another visitor. Making this structure 
+modular and extensible is the key to the success of this approach.
 
-\subsection{Pattern 6: complex aggregate operations in loops} \label{sec:p6}
+\subsection{Pattern 5: complex aggregate operations in loops} \label{sec:p5}
+
+The case of aggregate operations in loops was already treated in \cref{sec:p2},
+but the pattern was not completely covered, (intentionally) presenting the cases
+in its description in a non-complete way. In particular, a special usage case
+was omitted, here called the case of \textbf{delegated functions}. 
+%
+In this case, the construct is not directly called inside the loop, but it is
+\emph{delegated to another function that is called inside the loop}. 
+
+\subsection{Pattern 6: improper Evolve construct usage}
+
 
 %----------------------------------------------------------------------------------------
 \chapter{Evaluation and Testing}

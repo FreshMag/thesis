@@ -19,7 +19,7 @@ class ConstructCallVisitor : FirVisitorVoid() {
 		super.visitAnonymousFunctionExpression(anonymousFunctionExpression)
 	}
 
-	// This visits any (resolved) name reference in the code (variables usage for example)
+	// This method visits any (resolved) name reference in the code (variables usage for example)
 	override fun visitResolvedNamedReference(resolvedNamedReference: FirResolvedNamedReference) {
 		if (resolvedNamedReference.resolvedSymbol in checkedParametersDeclarations) {
 			checkedParametersDeclarations = // we filter out the parameter that are used

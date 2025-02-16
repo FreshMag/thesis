@@ -1,6 +1,6 @@
 // One of the simplest examples of Pattern 5: this should raise a warning
 fun delegate(aggregate: Aggregate<Int>) {
-	aggregate.evolving(0) { ... }
+	aggregate.evolving(0) { ... } // Pattern detected
 }
 
 fun Aggregate<Int>.entry() {
@@ -11,7 +11,7 @@ fun Aggregate<Int>.entry() {
 fun delegate(aggregate: Aggregate<Int>) {
 	fun delegate2() {
 		aggregate.alignedOn(0) {
-			aggregate.evolving(0) { ... }
+			aggregate.evolving(0) { ... } // Pattern NOT detected
 		}
 	}
 	delegate2()

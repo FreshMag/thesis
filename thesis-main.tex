@@ -1487,7 +1487,7 @@ local variables from nested functions, similar to the second case shown in
 \cref{lst:p5-example} without alignment present, are difficult to capture with
 the current approach. Since it is not a common usage case, it was decided to
 leave it for future works. It is a good opportunity, however, to reason about
-how what it has been developed so far presents, from time to time, some 
+how what it has been developed so far presents, from time to time, some
 branching conditions in the code or some particular programming ``tricks'' that
 appear as fragile or poorly maintainable code. 
 %
@@ -1516,6 +1516,60 @@ used together to inspect the code.
 ]{listings/P5Visitor.kt}
  
 \subsection{Pattern 6: improper Evolve construct usage}
+
+The last pattern presented in this chapter involves three of the constructs of the 
+Collektive DSL that we have seen: \lstinline{evolve}, \lstinline{neighboring}
+and \lstinline{share} (and their variants with the yielding context).
+%
+The \lstinline{evolve} construct is used to evolve the value of a device,
+iteratively updating it with the results of a function that is passed as a
+parameter. The \lstinline{neighboring} construct is used to evaluate an
+expression in neighbors, constructing a \lstinline{Field} object mapping the
+neighbors to the results of the evaluation. The \lstinline{share} construct is
+used to compute a \emph{space-time} evolution of the field, computing an
+expression over time and sharing it with the neighbors. Since the
+\lstinline{evolve} construct too can be used to evolve a field over time, its
+combination with the \lstinline{neighboring} construct can behave exactly like a
+\lstinline{share}, since the second one can be used to map the \emph{space}
+aspect. 
+%
+This is not always true, of course, but using the \lstinline{evolve} construct
+could easily lead to this inefficient usage of the DSL constructs,  especially
+if the developer is not aware of constructs like \lstinline{share}.
+
+This pattern consists specifically in this type of usage of the \lstinline{evolve}
+construct. Since the anonymous function passed to it as a parameter must return
+a value of the same type of the one gave to it as \emph{initial} one, a user could
+first use the \lstinline{neighboring} construct to evaluate the expression in 
+neighbors and then perform a \emph{field reduction} operation --- e.g., finding the
+max value in the field --- and return that as the result of the anonymous function.
+%
+Different is the case in which the \lstinline{neighboring} construct is used to 
+evaluate a different expression that \textbf{does not depend on the value updated
+by evolve} and therefore will share a value independently of the one evolved.
+
+These examples of usage and related version with the \lstinline{share} construct 
+substituted are shown in \cref{lst:p6-example}.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p6-example},
+  caption={Example of Pattern 6 detection in code}
+]{listings/P6Example.kt}
+
+\subsubsection{Formal description}
+
+Given an \lstinline{evolve} construct that is passed a function that contains a
+\lstinline{neighboring} construct, the pattern is satisfied when the expression
+evaluated by the \lstinline{neighboring} construct depends on the value of
+evolve, and it is used to compute the value returned by the anonymous function passed to
+the \lstinline{evolve} construct.
+
+\subsubsection{Design and Implementation}
+
+The description of the pattern seems quite simple, however the implementation of 
+the checker is not as trivial as it may seem. 
 
 
 %----------------------------------------------------------------------------------------

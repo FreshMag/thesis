@@ -1,0 +1,39 @@
+@startuml p6-workflow
+
+start
+:Initialize a list of dependent symbols with the anonymous function's parameters;
+
+while (Analyzing expressions)
+	if (Does it use a dependent symbol?) then (yes)
+		:Mark this expression as dependent;
+		if (Is this expression used in an assignment?) then (yes)
+			:Add the assignment's target symbol to the list;
+		endif
+	endif
+endwhile (No more expressions to analyze);
+
+if (Encounter neighboring construct?) then (yes)
+	if (Is this expression marked as dependent?) then (yes)
+		:Save the expression of the neighboring construct;
+		:Continue visit until end of anonymous function;
+		:Obtain return expression;
+		
+		if (Aggregate construct with yielding context?) then (yes)
+			:Extract receiver of yielding construct;
+		else (no)
+			:Use the expression itself;
+		endif
+	else (no)
+		:End check;
+	endif
+else (no)
+	stop
+endif
+
+:Check if expression is not equivalent to the one evaluated by neighboring construct;
+if (Not equivalent?) then (yes)
+	:Pattern detected;
+endif
+
+stop
+@enduml

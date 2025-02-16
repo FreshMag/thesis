@@ -1563,14 +1563,54 @@ substituted are shown in \cref{lst:p6-example}.
 Given an \lstinline{evolve} construct that is passed a function that contains a
 \lstinline{neighboring} construct, the pattern is satisfied when the expression
 evaluated by the \lstinline{neighboring} construct depends on the value of
-evolve, and it is used to compute the value returned by the anonymous function passed to
-the \lstinline{evolve} construct.
+evolve, and it is used to compute the value returned by the anonymous function
+passed to the \lstinline{evolve} construct.
 
 \subsubsection{Design and Implementation}
 
-The description of the pattern seems quite simple, however the implementation of 
-the checker is not as trivial as it may seem. 
+The mixed approach previously introduced will be fully exploited to implement
+this checker. In order to \emph{trace the dependencies} between the expressions
+that relate to the evolved value --- i.e., the parameter inside the
+\lstinline{evolve} anonymous function --- we need a system to \emph{mark
+expressions} that use this value and then maintain a list of symbols that are
+dependent on the evolved value. 
+%
+When these symbols are used in other expressions, we then mark theses as
+dependent on the evolved value as well and so on. When we encounter a
+\lstinline{neighboring} construct, we can immediately know if the expression
+evaluated by it depends on the evolved value, and if not the check can
+immediately end.
+%
+If the expression depends on the evolved value, we must save the evaluated
+expression and continue the visit until the end of the anonymous function with
+the return expression. Obtained the return expression, we must first extract the 
+receiver of the \lstinline{yielding} construct if the aggregate construct used 
+is a variant with the yielding context, or simply the expression itself if not. 
+%
+This extra step is necessary for the variants of the construct because the 
+value returned by the \lstinline{yielding} is not really relevant to the pattern
+detection, since it will be returned as it is either way. 
+%
+Finally, we must check if the expression is \textbf{not} equivalent to the one
+evaluated by the \lstinline{neighboring} construct, and if so the pattern is
+detected. 
 
+Since the workflow is not straightforward, a diagram of the process is shown in
+\cref{fig:p6-workflow}.
+%
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{figures/p6-workflow.pdf}
+  \caption{Summarized class diagram of the visitors inside the Kotlin 
+  compiler}
+  \label{fig:p6-workflow}
+\end{figure}
+%
+As for the previous patterns implemented using visitors, the implementation of
+the checker is quite simple and therefore omitted. The visitor, however, will
+need a specific section to be treated in detail. 
+
+\subsubsection{Visitor implementation}
 
 %----------------------------------------------------------------------------------------
 \chapter{Evaluation and Testing}

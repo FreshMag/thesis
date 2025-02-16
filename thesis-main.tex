@@ -1362,10 +1362,10 @@ In this case, the construct is not directly called inside the loop, but it is
 \emph{delegated to another function that is called inside the loop}. This
 function is not necessarily a nested function, as in the case already seen in
 \cref{sec:p2}, but it can be a function that is defined elsewhere in the code:
-this will be called the \emph{delegated function} or simply the \emph{delegate}.
-In order to contain aggregate calls, the delegate must have a parameter of type
-\lstinline{Aggregate} to use as a receiver for the aggregate constructs (if
-instead the delegate would have an explicit receiver of type
+from now on, this will be called the \emph{delegated function} or simply the
+\emph{delegate}. In order to contain aggregate calls, the delegate must have a
+parameter of type \lstinline{Aggregate} to use as a receiver for the aggregate
+constructs (if, instead the delegate would have an explicit receiver of type
 \lstinline{Aggregate}, in fact, the pattern would be trivially detected by the
 Pattern 2 checker, as the delegate would appear as an aggregate construct
 itself).
@@ -1389,23 +1389,23 @@ respect to Pattern 2.
 \subsubsection{Formal description}
 
 Given a looping construct (like the ones already seen for Pattern 2) and a
-declared function, here called \emph{delegate}, whose parameters contain one of
-type \lstinline{Aggregate} and whose body contains an aggregate construct call,
-the pattern is satisfied when \emph{delegate} is called inside the loop or in a
-chain of other function calls that ends with a call inside the loop, and neither
-\emph{delegate} nor the functions in the chain contain an \lstinline{alignedOn}
-operation wrapping one of the calls.
+declared function, here called \emph{delegate}, whose parameters list contains
+one of type \lstinline{Aggregate} and whose body contains an aggregate construct
+call, the pattern is satisfied when \emph{delegate} is called inside the loop or
+in a chain of other function calls that ends with a call inside the loop, and
+neither \emph{delegate} nor the functions in the chain contain an
+\lstinline{alignedOn} operation wrapping one of the calls.
 
 \subsubsection{Design and Implementation}
 
 To implement this pattern, a new condition will be added to the checker seen in
 \cref{lst:p2-checker} that will handle the case of delegated functions. The new
-condition will perform the same checks as the previous one, but instead of
-checking if the function call being examined is an aggregate one, it will check
-if one of its parameters are of type \lstinline{Aggregate}. To do this a new
-utility function is implemented: \lstinline{hasAggregateParameter}, shown in
-\cref{lst:p5-utility}.
-
+condition will perform the same checks as the previous one (i.e., is inside a
+looping construct and it is not aligned) but instead of checking if the function
+call being examined is an aggregate one, it will check if one of its parameters
+is of type \lstinline{Aggregate}. To do this, a new utility function is
+implemented: \lstinline{hasAggregateParameter}, shown in \cref{lst:p5-utility}.
+%
 \begin{lstlisting}[
   float, 
   language=Kotlin,
@@ -1415,12 +1415,14 @@ utility function is implemented: \lstinline{hasAggregateParameter}, shown in
 fun FirFunctionCall.hasAggregateArgument(): Boolean =
   getArgumentsTypes()?.any {
       it.classId == ClassId.topLevel(AGGREGATE_CLASS_FQ_NAME.toFqNameUnsafe())
-  } == true
+  } ?: false 
 \end{lstlisting}
-
+%
 This uses the \lstinline{getArgumentsTypes} and \lstinline{toFqNameUnsafe}
 extension methods that have been implemented for the job (and are omitted for
-brevity). Once this condition is satisfied, the visitor will be called to
+brevity). 
+
+Once this condition is satisfied, the visitor will be called to
 inspect the delegate function and check if it contains an aggregate construct
 call or a call to another function that contains an aggregate construct call
 (possibly in a chain of calls). \textbf{Note:} we cannot use the code already
@@ -1474,10 +1476,37 @@ function call in question, checking if the pattern is detected in the delegate.
 
 The implementation just explained is summarized in \cref{lst:p5-visitor}.
 Although the code is still short like for the other visitors, in this case we
-need to take \emph{multiple visiting call} of the same method and even
-\emph{recursive visiting} with another visitor into consideration. Finally,
-we will approach the pattern that was considered the most complex to detect,
-where multiple types of visitors were used together to inspect the code.
+need to take \emph{multiple visiting calls} of the same method and even
+\emph{recursive visiting} with an another visitor into consideration.
+
+\subsubsection{Considerations on this pattern}
+
+Unfortunately, some corner cases are not still captured by this checker and
+visitor: the main reason is that some corner cases that involve the usage of
+local variables from nested functions, similar to the second case shown in
+\cref{lst:p5-example} without alignment present, are difficult to capture with
+the current approach. Since it is not a common usage case, it was decided to
+leave it for future works. It is a good opportunity, however, to reason about
+how what it has been developed so far presents, from time to time, some 
+branching conditions in the code or some particular programming ``tricks'' that
+appear as fragile or poorly maintainable code. 
+%
+This aspect is related to the ``defensive'' approach for developing these static
+checkers: one could think that detecting the pattern is the core of the
+implementation but, in reality, one of the most important aspects is
+\textbf{being careful not to introduce false positives} to the static analysis.
+%
+This is logical, since the cases we are trying to capture are actually a very
+small subset of the possible programs using the Collektive DSL (and Kotlin in
+general). This is also the reason why adding more complex checks like the one
+just described has to be taken with much caution, and it is of main importance
+to add \textbf{more tests for cases where the pattern is not detected} than for
+cases where it is detected.
+%
+The approach taken for testing this important factor will be discussed in the
+next chapter: for now, we will move to the final pattern, the one that was
+considered the most complex to detect, where multiple types of visitors were
+used together to inspect the code.
 
 \lstinputlisting[
   float, 

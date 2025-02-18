@@ -24,7 +24,7 @@ if (Encounter neighboring construct?) then (yes)
 			:Use the expression itself;
 		endif
 	else (no)
-		:End check;
+		stop
 	endif
 else (no)
 	stop

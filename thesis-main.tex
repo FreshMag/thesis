@@ -1600,9 +1600,8 @@ Since the workflow is not straightforward, a diagram of the process is shown in
 %
 \begin{figure}
   \centering
-  \includegraphics[width=.7\linewidth]{figures/p6-workflow.pdf}
-  \caption{Summarized class diagram of the visitors inside the Kotlin 
-  compiler}
+  \includegraphics[width=.6\linewidth]{figures/p6-workflow.pdf}
+  \caption{Summarized workflow of the Pattern 6 detection}
   \label{fig:p6-workflow}
 \end{figure}
 %
@@ -1611,6 +1610,171 @@ the checker is quite simple and therefore omitted. The visitor, however, will
 need a specific section to be treated in detail. 
 
 \subsubsection{Visitor implementation}
+
+The first element the visitor is going to visit is, again, a function call
+corresponding to a Collektive \ac{DSL} construct, specifically the
+\lstinline{evolve} construct and its variant. In this case, the visitor will
+simply access the construct and look inside its parameters --- i.e., the 
+anonymous function. 
+%
+When this is done, the visitor will switch to the visit
+method of the anonymous function, where first it will check if this function
+is a \textbf{top nesting level} and not a nested function (for the first 
+visit it obviously is) and will access the \textbf{function parameters} and
+add them to a list of \emph{dependent symbols} kept by the visitor.
+%
+In \cref{lst:p6-visit-anonymous} this procedure is shown.
+%
+\begin{lstlisting}[
+  float, 
+  language=Kotlin,
+  label={lst:p6-visit-anonymous},
+  caption={Visitor method to visit an anonymous function}
+] 
+override fun visitAnonymousFunctionExpression(anonymousFunctionExpression: FirAnonymousFunctionExpression) {
+  if (nestingLevel == 0) {
+      val anonymousFunction = anonymousFunctionExpression.anonymousFunction
+      val parameters = anonymousFunction.valueParameters
+      parametersDeclarations = parameters.map { it.symbol }
+  }
+  nestingLevel++
+  super.visitAnonymousFunctionExpression(anonymousFunctionExpression)
+  nestingLevel--
+}
+\end{lstlisting}
+%
+The visitor will then visit the body of the anonymous function. Every time the
+visitor encounters a \lstinline{FirResolvedNameReference}, corresponding to a
+symbol usage, it will check if the symbol is contained in the list of dependent
+symbols. If so, the visitor will set a variable \lstinline{markExpression} to
+\lstinline{true}, meaning that the expression is dependent on the evolved value.
+%
+In this way, when the visitor encounters a property (i.e., local variable), it
+will check if the expression is marked as dependent and, if so, it will add the
+property to the list of dependent symbols. This is shown in
+\cref{lst:p6-visit-property}.
+%
+\begin{lstlisting}[
+  float, 
+  language=Kotlin,
+  label={lst:p6-visit-property},
+  caption={Visitor methods to implement a symbol and expression marking system}
+]
+override fun visitResolvedNamedReference(ref: FirResolvedNamedReference) {
+    if (ref.resolvedSymbol in parametersDeclarations ||
+        ref.resolvedSymbol in tracedDependentSymbols
+    ) {
+        markExpression = true
+    }
+}
+
+override fun visitProperty(property: FirProperty) {
+    if (markExpression) {
+        tracedDependentSymbols += property.symbol // add the symbol to the list
+        markExpression = false
+    }
+}
+\end{lstlisting}
+%
+These methods take care of the tracing of the dependent symbols, now it is
+necessary to approach the core of the visitor: the \lstinline{neighboring} and
+return expressions. 
+
+The first one can be inspected when the visitor encounters a function call, and
+then check for the fully-qualified name of the construct. In that case, we can
+extract the expression used as parameter to the construct and perform the
+necessary checks. The \lstinline{neighboring} construct can be used essentially
+in two ways:
+\begin{enumerate}
+  \item \textbf{Direct expression}: for example a numerical expression like a
+  sum between two numbers;
+  \item \textbf{Computation}: for example an anonymous function, in that case
+  the field returned by the construct has the computation as a result, in the 
+  form of a field of functions.
+\end{enumerate}
+
+In the first case, we can simply obtain the first argument of the construct,
+verify if the expression is \emph{marked} when visiting it and, if so, set a
+variable that \textbf{contains the expression for later}. In the second case, we
+must visit the anonymous function and obtain the return expression, and then
+perform the same operations. To do this, a utility function is implemented that
+\textbf{extracts the return expression of an anonymous function using another
+visitor}. The implementation is shown in \cref{lst:p6-support-visitor}. In this
+case, we create a visitor on the fly and visit the anonymous function, returning
+the expression found. This is an example of how composing visitors with the
+\ac{FIR} API can work.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p6-support-visitor},
+  caption={First support visitor to extract the return expression of an anonymous 
+  function}
+]{listings/P6SupportVisitor1.kt}
+
+Once we saved the expression evaluated by the \lstinline{neighboring} construct,
+a comparison with the return expression of the anonymous function is needed to
+complete the detection of the pattern. When the visitor encounters the return
+expression, it must first check if the nesting level is correct and if the
+expression of the \lstinline{neighboring} construct if present. If not, the
+pattern is skipped. Finally, to compare the return expression with the
+expression of the construct using the \lstinline{isStructurallyEquivalentTo}
+utility function previously introduced, we must handle a last special case: the
+yielding context. 
+
+In the case of the yielding context, the expression returned by the
+\lstinline{yielding} construct is not relevant to the pattern detection, and so
+its \textbf{receiver} must be used instead. To get the receiver, another support 
+visitor is implemented, shown in \cref{lst:p6-support-visitor2}.
+
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:p6-support-visitor2},
+  caption={Second support visitor to extract the receiver of a yielding construct}
+]{listings/P6SupportVisitor2.kt}
+
+The visitor is used in the visit method of the return expression, performing the
+final check on the equivalence of the expressions. If the expressions are not
+equivalent, the pattern is detected. The implementation of this last visit method 
+is shown in \cref{lst:p6-visit-return}.
+
+\begin{lstlisting}[
+  float, 
+  language=Kotlin,
+  label={lst:p6-visit-return},
+  caption={Visitor method to visit the return expression}
+]
+override fun visitReturnExpression(returnExpression: FirReturnExpression) {
+  super.visitReturnExpression(returnExpression)
+  if (neighboringExpression != null && nestingLevel == 1) {
+    val expressionToCheck = neighboringExpression as FirExpression
+    if (constructNameFQName == EVOLVING_FUNCTION_FQ_NAME) {
+      // case with yielding context
+      val yieldingReceiver =
+        with(YieldingReceiverVisitor()) {
+          returnExpression.getYieldingReceiver()
+        } ?: return
+      isReplaceable = !yieldingReceiver.isStructurallyEquivalentTo(expressionToCheck)
+    } else {
+      isReplaceable = !returnExpression.result.isStructurallyEquivalentTo(expressionToCheck)
+    }
+    return
+  }
+}
+\end{lstlisting}
+
+With this, all the patterns that were considered for the Collektive DSL static
+analysis have been implemented. As discussed in this chapter, many approaches
+were taken and in some cases mixed together to achieve the desired results.
+Since the presented patterns were not shown in their order of implementation, it
+is possible to see some areas of improvement, especially in the first
+ones implemented using the visitor pattern. 
+%
+Other considerations about this development process as well as other possible 
+ways to implement the checkers will be matter of discussion in the conclusions 
+of \cref{chap:conclusion}. First, the testing strategy that was adopted during 
+these checkers' implementation will be presented.
 
 %----------------------------------------------------------------------------------------
 \chapter{Evaluation and Testing}

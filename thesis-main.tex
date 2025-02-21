@@ -2066,7 +2066,53 @@ projects like the Collektive frontend plugin.
 
 \subsection{Main ideas behind the framework}
 
+The main inspiration behind Subjekt is the testing strategy used by the
+\emph{Scala}
+compiler\footnote{\url{https://github.com/scala/scala3/tree/main/tests}} (on
+a smaller scale of course).
+% 
+Essentially, the core idea is to set up a suite of \emph{test cases} having
+expected positive or negative outcomes. In the Scala compiler, source code and
+expected outcomes are separated into \emph{.scala} and \emph{.check} files,
+respectively. 
+%
+Subjekt follows a similar approach, but linking together source and expected
+outputs. The developer can write a configuration file in YAML or JSON format
+reflecting a \textbf{suite} of test \textbf{subjects} that are related to 
+a similar pattern to be tested. 
+%
+As for Scala, every testing case has a unique identifier, and in the case of
+Subjekt can be extracted from the result of the generation to refer to a 
+specific test case in the suite.
+
 \subsection{Core structure of Subjekt}
+
+In Subjekt, each configuration file defines a \textbf{Suite}, composed by a list
+of \textbf{Subjects}. Each Subject is essentially a map with string keys and
+values, where the latter contain \textbf{Expressions}: strings with expressions
+are called \textbf{Resolvables}. 
+%
+The expressions are strings that are parsed to generate a multitude of results:
+\emph{Subjekt} will extract these results and produce a set of outputs
+considering all the permutations of the expressions contained in the subjects.
+%
+The diagram in \cref{fig:subjekt-structure} shows the general class diagram of 
+the library.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\linewidth]{figures/subjekt-structure.pdf}
+  \caption{Top-level class diagram of the Subjekt library}
+  \label{fig:subjekt-structure}
+\end{figure}
+
+The final result are the \lstinline{ResolvedSubjects}. Each of these is
+essentially one of the generated outputs, and can be used to contain one of the
+source codes to be compiled and the expected diagnostics to be checked.
+%
+The output is actually a set of these object to avoid testing the same case
+multiple times in case of collisions due to the permutations of the expressions.
+
 
 \subsection{Final usage inside tests}
 

@@ -1,0 +1,65 @@
+@startuml subjekt-structure
+hide empty members
+interface Suite {
+    + suiteId: String
+    + subjects: Collection<Subject>
+    + symbolTable: SymbolTable
+}
+interface Subject {
+    + subjectId: String
+    + resolvables: Map<String, Resolvable>
+}
+interface Parameter {
+    + parameterId: String
+    + values: Collection<String>
+}
+interface Macro {
+    + macroId: String
+    + arguments: Collection<String>
+    + values: Collection<Resolvable>
+}
+
+Suite "1" *-- "n" Subject
+Suite o-- SymbolTable
+Subject ..> "n" ResolvedSubject : <<produces>> 
+
+interface Context {
+    + parameters: Collection<DefinedParameter>
+    + macros: Collection<DefinedMacro>
+}
+
+Context "1" o-- "n" DefinedParameter
+Context "1" o-- "n" DefinedMacro
+
+interface DefinedParameter {
+    + parameterId: String
+    + value: String
+}
+
+interface DefinedMacro {
+    + macroId: String
+    + value: Resolvable
+}
+
+interface SymbolTable {
+    + macros: Collection<Macro>
+    + parameters: Collection<Parameter>
+}
+
+SymbolTable "1" o-- "n" Parameter
+SymbolTable "1" o-- "n" Macro
+
+interface ResolvedSubject {
+    + parentSubjectId: String
+    + instances: Map<String, Instance>
+}
+
+ResolvedSubject "1" *-- "n" Instance
+Subject "1" *-- "n" Resolvable
+Macro "1" *-- "n" Resolvable
+Resolvable ..> "n" Instance : <<produces>>
+Resolvable ..> Context : <<uses>>
+
+interface Resolvable
+interface Instance
+@enduml

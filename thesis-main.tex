@@ -1865,31 +1865,31 @@ for the parts that change.
 
 \subsection{Initial template system}
 
-\note{TODO: describe the initial template system}
-
-A template file structured like this is shown in
-\cref{lst:template-file}.
+The initial template system consisted of simple Kotlin files containing the
+source code to be compiled with placeholders like the ones used in classical
+string formatting --- i.e., \lstinline{%s}. An example is shown in 
+\cref{lst:template-file}. 
 %
 \lstinputlisting[
-  float, 
   language=Kotlin, 
   label={lst:template-file},
   caption={A example of the templates created for testing multiple cases at 
   once}
 ]{listings/TestingTemplateFile.kt}
 %
-Then, instead of compiling the string obtained from the
-resource file directly, replace the placeholders cycling through a list of
-possible, hard-coded configurations in the test suite and for each perform the
-correct check on the diagnostics produced.
+Then, instead of compiling the string obtained from the resource file directly,
+replace the placeholders cycling through a list of possible, hard-coded
+configurations in the test suite and for each perform the correct check on the
+diagnostics produced.
 %
-In addition, we extract a small utility in order to make the process of reading
-resources, compiling and comparing messages more concise and readable. The
-result looks similar to the one shown in \cref{lst:template-test-suite}. Only a
-relevant part of the test suite is shown, the rest is omitted for brevity.
+In addition, we extracted a small utility in order to make the process of
+reading resources, compiling and comparing messages more concise and readable
+using Kotlin infix methods.
+The result looks similar to the one shown in \cref{lst:template-test-suite}.
+Only a relevant part of the test suite is shown, the rest is omitted for
+brevity.
 
 \lstinputlisting[
-  float, 
   language=Kotlin, 
   label={lst:template-test-suite},
   caption={Part of the test for Pattern 2 revised using template files}
@@ -1918,15 +1918,134 @@ permit writing tests like the ones shown in \cref{lst:template-revised-suite}.
   caption={\Cref{lst:template-test-suite} revised using the new utilities}
 ]{listings/TestingExample3.kt}
 %
-It is easy to see how the test not only gained in readability, but it is much
-more scalable and can be used to test many more cases adding only a few lines of
-code. 
+Variables also have default values, making the tests more concise and easier to
+write. It is easy to see how the test not only gained in readability, but it is
+much more scalable and can be used to test many more cases adding only a few
+lines of code. 
+
+The obtained result, however, is still far from optimal: the testing code still
+depends too much on the structure of the template files, exploiting hard-coded
+names of variables inside the template files and in the test suite. The problem
+still relies on the fact that \textbf{the testing resource doesn't encapsulate
+the possible values of its variable}, making it more flexible indeed but also
+less maintainable and more error-prone. 
+%
+Without using a system more similar to a \emph{template engine}, it would be
+difficult to build the testing process without occurring in scale issues,
+especially for more complex patterns discussed in \cref{chap:contribution} where
+the number of possible cases to test is much higher than the ones presented in
+the examples. Even in that case, however, the testing process would have to
+interact with the templates in order to determine values of its variable parts,
+also for \textbf{identifying the expected outcomes} of the resulting source
+code's compilation. In other words, there still would be too much coupling
+between the testing code and resource files.
 
 \section{Code generation: a small DSL leveraging Kotlin Poet}
 
+A possible approach to solve the problem of coupling between the testing code
+and the resource files is \textbf{code generation done directly inside tests}.
+Instead of using external files, a developer could create an appropriate
+configuration in the tests to capture a multitude of cases, declaratively 
+specifying how the source code should be structured and therefore knowing at
+prior what the expected diagnostics should be.
+%
+It is quite clear that the task is not an easy one, since generating multiple 
+source codes in a declarative way using the same programming language as the
+target one is not trivial. Thankfully, an already existing and well-known 
+library can be used for the generation: \textbf{Kotlin Poet} by Square Inc.
+
+Kotlin Poet is a library with a Java and Kotlin API to generate Kotlin sources.
+Its main use cases are generating code for annotation processors or interacting
+with metadata files, and it is inspired by another library by the same authors,
+Java Poet. 
+%
+The library is quite powerful and allows generating code in a declarative way,
+using a fluent API to create complex structures with few lines of code. One
+way to use it is through a \emph{builder} pattern, where methods are chained to
+create the desired structure. This particular way of generating code can reveal
+itself as very useful for our purpose, since it can be manipulated to build a 
+\ac{DSL} that facilitates some operations for the developer.
+
 \subsection{General structure and usage}
 
+To make the generation of code more concise and readable, a \ac{DSL} has been
+created using \textbf{extension methods to the Kotlin Poet builders}.
+Encapsulating the generation of common code and frequent and repeated operations
+inside these methods, allows for a completely customizable output with a few
+lines of code, using constructs tailored for our testing cases. 
+%
+Take the extensions shown in \cref{lst:poet-extensions} for example: in this
+case we create utilities to build programs with blocks and specific wrapping
+functions, like the \lstinline{alignedOn} seen in \cref{sec:p2} during the
+explanation of Pattern 2. 
+%
+\lstinputlisting[
+  float, 
+  language=Kotlin, 
+  label={lst:poet-extensions},
+  caption={Example of Kotlin Poet extensions used to generate code}
+]{listings/KotlinPoetMethods.kt}
+%
+This way, the developer can pass other extension methods --- e.g., parameter
+\lstinline{content} visible in \cref{lst:poet-extensions} --- to these
+\ac{DSL}-like keywords to highly customize the final output, therefore 
+maintaining Kotlin Poet benefits but also making it more directed to 
+our needs. 
+
+Finally, it is possible to rewrite the tests, using no external resource file
+and reusing the same pieces of code that do not change across the several
+checks. A small snippet of how this small \ac{DSL} can be used in tests is shown
+in \cref{lst:poet-test-suite}.
+
+\lstinputlisting[
+  language=Kotlin, 
+  label={lst:poet-test-suite},
+  caption={Example of a test suite using the Kotlin Poet extensions}
+]{listings/TestingExample4.kt}
+
+Imagining various checks to be done for Pattern 2 --- the one the examples of
+this chapter are based on --- this approach greatly reduces the amount of
+boilerplate code, intervening only inside the function containing the call
+to the aggregate construct and the loop construct, and then customizing it 
+with other parts, like the \lstinline{alignedOn} construct that wraps the 
+tested function call. 
+%
+At last, the expected diagnostics are formulated starting from the case that is
+being generated and tested and compared with the one produced by the compilation
+thanks to the Kotlin Compile Testing library already cited. 
+%
+This last operation is encapsulated inside the small utility library already
+implemented for the previous testing approaches, adding also the customized
+function to the source code: this summarizes what is done at line 18 of
+\cref{lst:poet-test-suite}.
+
 \subsection{Considerations}
+
+The approach of code generation seems to be the most flexible and scalable 
+solution to the problem at hand: even though it wasn't considered worth the 
+effort to integrate a system like this in the first stages of the development,
+patterns examined further in the thesis showed how many possible cases 
+required a proper a more complete testing strategy without falling into
+verbosity and repetition (e.g., Pattern 5 and Pattern 6).
+%
+Nevertheless, more complex test cases, where more than just a couple of lines of
+code change, still require considerable effort to create Kotlin sources subject
+to compilation. With the small \ac{DSL} created, the approach just described
+tends to become less readable and harder to interpret, to the point that in
+cases where there isn't enough common code, it becomes easier to write the code
+directly as a single string.
+
+It seems that the problem still regards static resource files in a sense: even
+though common parts of the code are reused and customized with the \ac{DSL}, the
+``variability'' of general-purpose languages like Kotlin makes it difficult to
+reduce possible Kotlin sources to something like templates or customizable parts
+of code.
+%
+For these reasons, this small \ac{DSL} was not integrated into the Collektive
+project, but it was used as a starting point to develop a more complete and
+flexible testing framework that could be used to test the Collektive frontend
+plugin in a more comprehensive way. 
+
 
 \section{Custom testing framework: Subjekt}
 

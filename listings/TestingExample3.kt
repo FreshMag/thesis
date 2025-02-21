@@ -21,5 +21,4 @@
 				testingProgram shouldCompileWith noWarning
 			}
 		}
-		// ...
 }

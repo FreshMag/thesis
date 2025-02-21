@@ -2046,8 +2046,23 @@ project, but it was used as a starting point to develop a more complete and
 flexible testing framework that could be used to test the Collektive frontend
 plugin in a more comprehensive way. 
 
-
 \section{Custom testing framework: Subjekt}
+
+\emph{Subjekt} is a tool for generating textual results starting from a
+configuration in YAML or JSON format. It can be used to generate multiple
+results from permutations of parameters of the configuration, easily creating
+many variations of the same output.
+%
+This tool started as a simple utility to generate multiple Kotlin sources from a
+starting configuration and then integrate them inside Collektive test projects.
+Later in the development process, it was decided to expand its capabilities to
+directly generate test cases for the Collektive plugin from inside the test
+suites, adding only the configurations as resources.
+
+Subjekt is a small Kotlin multiplatform library available on \emph{Maven
+Central}, \emph{npmjs} and GitHub packages repositories. In this section we will
+present the main benefits of using a tool like this for testing static analysis
+projects like the Collektive frontend plugin.
 
 \subsection{Main ideas behind the framework}
 

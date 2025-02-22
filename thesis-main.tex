@@ -2258,6 +2258,79 @@ the small testing framework Subjekt, developed exactly for this purpose.
 
 \section{Approaching meta-level analysis}
 
+In this thesis, multiple techniques have been employed to build checkers capable
+of identifying increasingly complex patterns, ultimately relying on the widely
+used \emph{visitor pattern}. This choice was necessary to align with Kotlin's
+\ac{FIR} API, which, while offering extensive capabilities, remains closely
+tied to the compiler's internal structures. 
+%
+However, this strong coupling highlights a broader challenge: the lack of a
+higher-level abstraction for static analysis within compiler plugins. As
+demonstrated, performing pattern-based checks requires directly traversing and
+manipulating the tree, making the implementation more intricate and less
+maintainable. This underlines the importance of elevating compiler plugins to a
+\textbf{meta-level}, where analysis can be expressed through a specialized
+meta-language rather than being deeply intertwined with compiler internals. 
+%
+Such an approach, similar to what other static analysis tools already provide,
+enhances at least three aspects of the analysis tool:
+\begin{itemize}
+  \item \textbf{expressiveness}: meta-level languages already exists in order
+  to capture complex patterns and relationships between code constructs, and
+  can be used to express the analysis in a more concise and readable way;
+  \item \textbf{maintainability}: by decoupling the analysis logic from the
+  compiler-level representation, it becomes easier to adapt to language 
+  evolution and ensure more scalable and reliable checks;
+  \item \textbf{modularity}: the analysis can be split into smaller, more
+  manageable components, focusing on specific aspects of the pattern 
+  being checked. 
+\end{itemize}
+
+Thus, while the \ac{FIR} API enables powerful static analysis, the need for a
+higher-level abstraction remains crucial to making these techniques more
+accessible, flexible, and efficient in the long term.
+
+\section{Future works}
+
+At the moment of writing, the Kotlin API that enables static analysis in
+frontend plugins like the one seen in this thesis is still highly experimental,
+therefore subject to changes and improvements. Developing a meta-level language
+tool for this API could be a possible future work, but it would require a more
+stable and mature version of the API to be effective.
+%
+Despite this, working on a unified language similar to the one used in other
+static analysis tools could be a good starting point, maybe based on
+\emph{tree-based pattern matching} techniques or other more advanced methods.
+This could allow compiler plugins to become easier to use and more accessible
+to developers, leveraging the full power of this type of system. 
+%
+Other than that, allowing compiler plugins to use configuration files already
+used by other tools like \emph{Detekt} would strenghten the idea of the unified
+approach even more, making the compiler plugin approach an interesting choice 
+as a standards for static analysis tools on the Kotlin platform.
+
+Another possible future work could involve the testing method, expanding the
+automatized approach taken with the Subjekt framework to be more inclusive and
+flexible, allowing the developer to test more complex patterns with less effort,
+maybe even in a way that is tied to the meta-level language used for the checks.
+%
+Finally, the development of the Collektive frontend plugin could be expanded to
+include more patterns and more complex checks, maybe arose after a more in-depth
+usage of the \ac{DSL} in a real project, in order to make the plugin more
+complete and effective in spotting bad usages of the available constructs.
+
+The Kotlin ecosystem is one of the most vibrant and fast-growing, thanks to its
+flexibility and the wide range of platforms it can target. Compiler plugins are
+a powerful tool that can be used to enhance the development process and the
+quality of the code produced, bringing paradigms that struggle to be adopted
+into the mainstream. 
+%
+Empowering developers to use these tools more seamlessly across this vast
+landscape of platforms and projects could unlock their true hidden potential,
+turning them into a powerful asset rather than a niche solution.
+
+
+
 %----------------------------------------------------------------------------------------
 % BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------

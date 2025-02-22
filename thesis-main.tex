@@ -2095,6 +2095,11 @@ are called \textbf{Resolvables}.
 The expressions are strings that are parsed to generate a multitude of results:
 \emph{Subjekt} will extract these results and produce a set of outputs
 considering all the permutations of the expressions contained in the subjects.
+Special delimiters \lstinline|${{| and \lstinline|}}| are used in order to
+extract expressions from strings, inspired by the GitHub actions expressions
+syntax\footnote{
+\url{https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions}
+}.
 %
 The diagram in \cref{fig:subjekt-structure} shows the general class diagram of 
 the library.
@@ -2106,15 +2111,94 @@ the library.
   \label{fig:subjekt-structure}
 \end{figure}
 
-The final result are the \lstinline{ResolvedSubjects}. Each of these is
+The main entities that produce permutations are \textbf{Parameters} and
+\textbf{Macros}. Both of them can have multiple values to substitute in the
+expressions where they are used, but the difference is that the former's values
+do not contain other expressions, while the latter's ones are actually other
+Resolvables and can accept arguments to substitute in their expressions ---
+i.e., a kind of function that returns multiple values --- leading to an
+exponential growth of the number of results (for example when other Parameters
+are passed to the Macro, making Subjekt produce permutations of the passed
+Parameter's values and the Macro's ones).
+%
+When a Resolvable needs to be resolved, the Subjekt library will determine all
+the possible \textbf{Contexts} that can be generated from the Parameters and
+Macros. Each Context will contain one ``fixed'' value for each of them --- i.e.,
+\textbf{DefinedParameter} and \textbf{DefinedMacro} --- and will therefore 
+correspond to one of the total permutations.
+%
+The Resolvable will finally produce one \textbf{Instance} for each of the
+Contexts.
+
+The final result are the \textbf{ResolvedSubjects}. Each of these is
 essentially one of the generated outputs, and can be used to contain one of the
 source codes to be compiled and the expected diagnostics to be checked.
 %
 The output is actually a set of these object to avoid testing the same case
 multiple times in case of collisions due to the permutations of the expressions.
 
-
 \subsection{Final usage inside tests}
+
+As previously introduced, Subjekt can be configured using YAML or JSON format.
+To use it inside Collektive in order to produce testing cases, a resource file
+will be created for each pattern to be tested, containing the entirety of cases
+for that pattern. In order to test them, we will create a Kotest specification
+for each Subjekt configuration, that gets loaded using the Subjekt library and
+then executed comparing the diagnostics produced by the compilation with the
+expected ones.
+
+Ultimately, the Kotlin Compile Testing library was abandoned in favor of a
+custom solution that uses a utility singleton named
+\lstinline{CollektiveK2JVMCompiler} that automatically compiles a list of source
+files returning the diagnostics produced via a \lstinline{MessageCollector} and
+using the Collektive compiler plugin. 
+
+In \cref{lst:subjekt-suite} a small example of a simple Subjekt configuration
+used for the tests of Pattern 2 is shown. In this configuration
+\lstinline{loop}, \lstinline{prettify} and \lstinline{AGGREGATE} are
+respectively two Macros and one Parameter that are omitted for brevity. The
+first one wraps the argument with several types of iteration constructs, for
+example a \lstinline{for} loop or a \lstinline{map} method call on a list. The
+second is a Macro exposed by Subjekt in all its configurations and that is used
+to concatenate any number of arguments into a camel case, special
+characters-free formatted string. The last one is a Parameter that contains a
+list of aggregate construct to be tested in the source code (e.g.,
+\lstinline{neighboring}).
+
+\lstinputlisting[
+  float, 
+  language=Yaml,
+  label={lst:subjekt-suite},
+  caption={Example of a Subjekt configuration file used for Pattern 2 testing.}
+]{listings/SubjektExample.yaml}
+
+The configuration file is then loaded inside the test suite, and the subjects
+are resolved and executed. The expected diagnostics are then compared with the
+ones produced by the compilation, and the test is considered successful if they
+match. In \cref{lst:subjekt-test-suite} a small snippet of the test suite using
+Subjekt is shown.
+
+\lstinputlisting[
+  language=Kotlin,
+  label={lst:subjekt-test-suite},
+  caption={Example of a test suite using Subjekt}
+]{listings/TestingExample5.kt}
+
+As we can see, the test suite is quite concise and readable, and can be easily
+expanded to test more cases by adding more configurations to the resource file.
+Moreover, inside the Kotest specification the developer does not have to worry
+about the details of the source being compiled or the diagnostics produced and,
+with an appropriate implementation of the check, if a test fails it is easy to
+immediately see the source code that caused the failure and the expected
+diagnostics that were not produced, leading to an efficient test-driven
+development cycle.
+
+Subjekt is still a small library that can be expanded and improved in order to
+make the creation of tests even more automatized and with less repetitions, but
+its approach represents a possible solution to the problem of testing static
+analysis tools that was faced during the development of the Collektive frontend
+plugin for this thesis.
+
 
 %----------------------------------------------------------------------------------------
 \chapter{Conclusions}

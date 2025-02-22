@@ -1,0 +1,14 @@
+name: "Invalid iteration of aggregate calls"
+# ...
+
+subjects:
+
+  - name: Iteration${{ prettify(AGGREGATE, loop(AGGREGATE)) }}
+    code: |-
+      fun Aggregate<Int>.entry() {
+        ${{ loop(AGGREGATE) }}
+      }
+    outcomes:
+      warning: |-
+        Aggregate function '${{ AGGREGATE }}' has been called...
+      # ...

@@ -2199,17 +2199,64 @@ its approach represents a possible solution to the problem of testing static
 analysis tools that was faced during the development of the Collektive frontend
 plugin for this thesis.
 
-
 %----------------------------------------------------------------------------------------
 \chapter{Conclusions}
 \label{chap:conclusion}
 %----------------------------------------------------------------------------------------
 
+In this chapter we will present the conclusions of the work done during the
+thesis, starting from the main contributions and the results obtained, and then
+moving to the discussion of the limitations and possible future works that can
+be done to improve the Collektive frontend plugin as well as static analysis 
+tools via compiler plugins in general.
+
 \section{Opportunities of Compiler plugins}
 
-\section{Approaching meta-level analysis}
+Compiler plugins represent a very powerful tool for developers that want to
+customize a specific ``environment'' within a framework written in a general
+purpose language. If brought to a sufficient degree of integration, they can
+embrace the full power of \emph{internal} \acp{DSL}, breaking some remaining
+barriers between the domain and the host language. If added to an automatically
+integrated static analysis tool like a frontend compiler plugin, it can also
+help developers to avoid common obstacles to the adoption of new tools and 
+``languages'' in their projects, speeding up the learning process of the new
+constructs and the spreadness of new paradigms.
 
-\section{Future works}
+In this thesis, the development of the Collektive frontend plugin showed an
+example of how this can be approached in a real use case, and how the
+interaction with the compiler can happen in a seamless way, potentially leading
+to libraries made specifically to build Kotlin compiler plugins enhancing the
+already existing, still limited and experimental, K2 frontend API.
+%
+Through the development of the plugin, it was interesting to see how spotting
+new patterns to be caught with static analysis immediately corresponded to their
+implementation directly in the same tool used to enable the target \ac{DSL}.
+This helped understand just how much bringing static analysis towards the tool
+that is being analyzed can be beneficial, since it allowed to immediately spot
+bad usages inside already existing code, therefore leading to the formulation of
+new patterns to be detected and building a virtuos cycle of improvement of the
+whole framework. Moreover, such a development could exploit this opportunity to
+delegate bad usages of the \ac{DSL} to the compiler, making the developer's life
+easier and the codebase more robust, without having to rely on ``programming
+tricks'' or forced limitations of the language to avoid bad usages.
+%
+Finally, using a unified approach to the static analysis tool development, in 
+this case the frontend compiler plugin, can greatly facilitates the inclusion 
+of such a tool in the development environment, making it interact with the 
+\ac{IDE} and build system automatically and without the need of additional
+\ac{IDE} plugin or other types of necessary integrations, often developed by
+third parties and not always up-to-date with the latest versions of the
+frameworks.
+
+In order to show a solid development process of such a plugin, covering the
+full spectrum of the cycle, more effort was put into building an effective
+testing strategy that could be used to test also a bigger number of patterns
+even more complex than the ones presented in this thesis. This led to the 
+exploration of different testing approaches, each one with its own pros and
+cons, and finally to a more scalable and flexible method, accompanied by
+the small testing framework Subjekt, developed exactly for this purpose.
+
+\section{Approaching meta-level analysis}
 
 %----------------------------------------------------------------------------------------
 % BIBLIOGRAPHY

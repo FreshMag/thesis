@@ -79,15 +79,15 @@ issues, error handling, etc.). At the same time, adhering to coding standards
 helps to avoid both trivial and non-trivial errors from the outset.
 Many tools exist to enforce these coding standards and to detect violations and,
 moreover, these are usually among the easiest types of tools to integrate, often
-already included within \acp{IDE}.
+already included within \acp{IDE} \cite{DBLP:journals/queue/Thomson21}.
 %
 The effectiveness of static analysis tools has been the subject of various
 studies,  \cite{DBLP:journals/jss/LenarduzziPSLP23} evaluating their detection
 capabilities, agreement, and precision. Some of these studies revealed a low
 degree of agreement among the tools and highlighted the need for a better
-understanding of their actual capabilities. More advance tools have been used
-also to rewrite code and help with the development of very complex systems,
-like \emph{Coccinelle} for the Linux kernel
+understanding of their actual capabilities. Highly advanced tools have been used
+also to rewrite code and help with the development of very complex systems, like
+\emph{Coccinelle} for \emph{collateral evolutions} inside the Linux kernel
 \cite{DBLP:conf/eurosys/PadioleauLHM08}\cite{DBLP:conf/usenix/LawallM18}.
 %
 More over, in the last years, the static analysis tools have become more popular
@@ -111,8 +111,23 @@ must be exceptionally reliable and robust. They serve as critical foundations
 for software development, and they are among the last places where one would
 want to encounter a bug. Any flaw in these tools can lead to incorrect analysis,
 misguiding developers and potentially introducing severe issues into a codebase.
+
+A major challenge in static analysis is balancing accuracy while minimizing
+\textbf{false positives} and \textbf{false negatives}
+\cite{DBLP:journals/queue/Thomson21}. A false positive occurs when the tool
+incorrectly flags a valid piece of code as problematic. This can lead to
+unnecessary developer frustration, wasted time, and, in extreme cases, a loss of
+trust in the tool itself. On the other hand, a false negative happens when the
+tool fails to detect an actual issue, giving developers a false sense of
+security and allowing critical bugs to slip through undetected: this kind of
+error is also harder to detect when evaluating and testing the tool.
 %
-Moreover, from a technical standpoint, developing such tools also requires
+For novel paradigms, where best practices and common pitfalls are still being
+explored, finding this balance is even more complex, increasing the risk for
+these kinds of errors when there are no well-established rules and patterns to
+guide analysis.
+%
+Finally, from a technical standpoint, developing such tools also requires
 building a substantial integration layer with other systems to ensure their
 usability. For instance, they need to seamlessly integrate with \acp{IDE}, code
 editors, and development pipelines, further increasing the complexity of their
@@ -138,17 +153,17 @@ situation also causes many promising research projects to remain confined within
 academia, preventing their potential impact on the broader software development
 industry. 
 
-It is clear now that knowing how can this cycle be broken is a key point in 
-the development of new paradigms and tools.
+Knowing how to break this cycle could represent a great incentive to the
+development of new paradigms and tools.
 
 \section{The role of Domain Specific Languages} \label{sec:dsls}
 
-When implementing a new paradigm in the form of a programming language,
-\acp{DSL} are often used. A \ac{DSL} is a specialized language designed for a
-specific domain, rather than a general-purpose programming language. Since many
-new paradigms do not require extensive general-purpose functionality, \acp{DSL}
-often provide a natural and efficient way to express the paradigm’s core
-concepts.
+When introducing a new programming paradigm, \acp{DSL} are often among the
+preferred means of implementation. A \ac{DSL} is a specialized language designed
+for a specific domain, rather than a general-purpose programming language. Since
+many new paradigms do not require extensive general-purpose functionality,
+\acp{DSL} often provide a natural and efficient way to express the paradigm’s
+core concepts.
 %
 One of the key advantages of \acp{DSL} is their ability to bring the target
 domain closer to its usage and manipulation. This often results in a syntax that
@@ -157,16 +172,18 @@ more declarative way of writing code. Additionally, because \acp{DSL} are
 inherently more restricted in scope than general-purpose languages, developing
 static analysis tools for them tends to be significantly easier. Their limited
 expressiveness reduces the complexity of the analysis, making it more feasible
-to create robust and effective tooling. 
+to create robust and effective tooling \cite{DBLP:journals/csur/MernikHS05}. 
 
 Recently, many new \acp{DSL} have been implemented as \emph{internal} to a host
-language. Internal \acp{DSL} are embedded within a general-purpose language,
-using the host language's syntax and semantics to define the domain-specific
-constructs. This approach offers several advantages, including the ability to
-leverage the host language's ecosystem and tooling, without having to develop a
-compiler from scratch and manage all the necessary checks. 
+language. Internal \acp{DSL} are \emph{embedded} within a general-purpose
+language, using the host language's syntax and semantics to define the
+domain-specific constructs. This approach offers several advantages, including
+the ability to leverage the host language's ecosystem and tooling, without
+having to develop a compiler from scratch and manage all the necessary checks.
+It also makes easier for the tool to be distributed and used by a broader
+audience, as it can be published as a library for the host language.
 %
-Additionally, internal \ac{DSL} users can use already existing libraries
+Finally, internal \ac{DSL} users can also exploit already existing libraries
 available for the host language to make their life easier. This approach,
 however, also comes with its disadvantages, the main one being the limitations
 in their expressiveness, as the host language's capabilities can
@@ -174,7 +191,7 @@ in their expressiveness, as the host language's capabilities can
 \acp{DSL} could suffer from scalability issues when the lack of full control
 over the language becomes an obstacle to the paradigm reflection in the code.
 Moreover, implementing custom static checks over the code could be difficult
-when the host language does not provide the necessary hooks to do so (i.e., 
+when the host language does not provide the necessary ``hooks'' to do so (i.e.,
 meta-programming capabilities).
 
 In conclusion, even though internal \acp{DSL} can be a solution to the first
@@ -189,16 +206,22 @@ compilers share significant similarities in their operations. Both perform
 thorough examinations of source code without executing it, aiming to identify
 errors, enforce coding standards, and optimize performance. Most of what
 compilers do on the static analysis side is to facilitate code optimization and
-error detection during the compilation process. In fact, a compiler can be
+error detection during the compilation process. Essentially, a compiler can be
 viewed as a form of static analysis tool, as it analyzes code to generate
 executable programs and associated debugging information
 \cite{DBLP:journals/queue/Thomson21}.
 %
 Specialized static analysis tools, on the other hand, extend beyond the
 capabilities of standard compilers by offering additional functionalities and
-broader diagnostic capabilities. They offer a broader range of diagnostic rules,
-enabling the detection of specific and uncommon bugs that compilers might
-overlook.
+broader diagnostic capabilities. They enable detection for specific and uncommon
+bugs that compilers might overlook but are also, however, distributed as
+separated software programs, that need to be integrated in some way with the
+development process.
+
+In the end, compilers offer a possibly more limited range of already included
+static checks (as the compiler is a necessary tool for building the software)
+while specialized tools can offer a broader range of checks but need to be
+integrated externally.
 %
 What if, however, the compiler were extended beyond its core functionality,
 incorporating specialized capabilities that go beyond the scope of a
@@ -246,9 +269,10 @@ compilation process to their specific needs.
 Kotlin's compiler architecture facilitates the creation of plugins that can
 modify or extend its behavior during compilation. For example, the
 \emph{all-open} compiler plugin in Kotlin allows classes annotated with a
-specific annotation to be open without the explicit \lstinline{open} keyword,
-adapting Kotlin to the requirements of frameworks that need classes to be
-open. 
+specific annotation to be \emph{open} (i.e., open for extensions, allowing the
+creation of subclasses) without the explicit \code{open} keyword, adapting
+Kotlin to the requirements of frameworks that need classes to have this
+characteristic. 
 
 When guiding developers towards the creation of compiler plugins, JetBrains
 compares them to \textbf{Annotation Processors}
@@ -280,7 +304,7 @@ code and performing checks based on annotations, compiler plugins can exploit a
 very powerful API that can create and modify byte-code, elements inside the
 \ac{IR} and more, allowing the developers to solve a whole new class of
 meta-programming problems. In addition, the use of annotations in the code could
-make it more ``cluttered'' from the perspective of a DSL, reducing it to
+make it more ``cluttered'' from the perspective of a \ac{DSL}, reducing it to
 constructs that belong more strictly to the host language, while the compiler
 plugin would not need these annotations. Of course, Annotation Processors are
 typically easier to write and maintain than compiler plugins, but this extra
@@ -289,21 +313,25 @@ presented in this thesis.
 
 \subsection{Main challenges and requirements}
 
-At the time of writing, the development of frontend compiler plugins in Kotlin is
-still a relatively less explored area compared to the backend ones. Because of the 
-very little documentation and examples available, the development of frontend 
-compiler plugins can be a challenging task, that quite often requires inspecting 
-the Kotlin compiler source code to understand how to interact with it.
+At the time of writing, the development of frontend compiler plugins in Kotlin
+is still a relatively less explored area compared to the backend ones. Because
+of the very little documentation and examples available, the development of
+frontend compiler plugins can be a challenging task, that quite often requires
+inspecting the Kotlin compiler source code directly to understand how to
+interact with it.
 %
 Frontend compiler plugins can be implemented using \textit{Extensions} to the
 Kotlin compiler, a topic that will be covered more in detail in the following
-chapters. This thesis presents the development process of a frontend compiler
-plugin designed to build upon an existing \textit{backend} plugin. The primary
-purpose of this frontend plugin is to perform static checks on source code,
-ensuring compliance with specific rules related to the functionality of the
-pre-existing backend plugin. To better understand the target rules developed
-within this frontend plugin and its context, it is necessary to first introduce 
-the backend plugin and the project it is part of.
+chapters. 
+
+This thesis presents the development process of a frontend compiler plugin
+designed to build upon an existing \textit{backend} plugin, built for enhancing
+the capabilities of an internal \ac{DSL}. The primary purpose of this frontend
+plugin is to perform static checks on the source code, ensuring compliance with
+specific rules related to the functionality of the pre-existing target
+framework. To better understand the target rules developed within this frontend
+plugin and its context, it is necessary to first introduce the backend plugin
+and the project it is part of.
 
 \paragraph{Structure of the Thesis}
 
@@ -332,12 +360,12 @@ results and insights gained throughout this research.
 %----------------------------------------------------------------------------------------
 
 As already stated, the development of the frontend compiler plugin presented in
-this thesis will be built on top of an existing backend plugin. The backend
-plugin is part of a larger project named \emph{Collektive}, a Kotlin
-multiplatform framework that provides a \ac{DSL} for the \textbf{Aggregate
-Computing} \cite{Beal2015} paradigm. This chapter will provide an overview of
-the concepts behind Collektive as well as the feature behind its backend plugin
-and Kotlin compiler plugins development in general.
+this thesis will be built on top of an existing backend plugin. This one is
+part of a larger project named \emph{Collektive}, a Kotlin multiplatform
+framework that provides a \ac{DSL} for the \textbf{Aggregate Computing}
+\cite{Beal2015} paradigm. This chapter will provide an overview of the concepts
+behind Collektive as well as the features behind its backend plugin and Kotlin
+compiler plugins development in general.
 
 \section{Aggregate Computing: a novel paradigm}
 
@@ -349,7 +377,7 @@ number, position, and behavior. This abstraction enables developers to reason
 about distributed systems in terms of \emph{collective} operations over spatial and
 temporal fields, rather than device-to-device interactions. 
 
-The foundation of aggregate programming is built on \textbf{field calculus}
+The foundation of Aggregate Programming is built on \textbf{field calculus}
 \cite{Beal2014TowardsAU}, a set of constructs designed for \emph{spatial
 computing}. These constructs enable the implementation of robust coordination
 mechanisms, such as self-stabilizing and scalable operations \cite{Viroli2018}
@@ -361,7 +389,7 @@ density estimation, dispersal advice, and navigation support.
 
 Aggregate computing formalism has been proposed in various ways, introducing
 syntaxes and semantics to support distributed, collective behaviors in dynamic
-systems. Field calculus, as a foundational model, supports aggregate computing
+systems. Field calculus, as a foundational model, supports Aggregate Computing
 by enabling global-level manipulation of computational fields through a
 minimalistic syntax. 
 %
@@ -375,7 +403,15 @@ Managing the programming line of action for these kinds of systems is not
 trivial, but several approaches have already been proposed, including static and
 dynamic checks that can spot subtle bugs and vulnerabilities in the code, by
 focusing on concepts like \textbf{neighborhood interactions} and \textbf{domain
-alignment} \cite{DBLP:conf/saso/AudritoDVC16}.
+alignment} \cite{DBLP:conf/saso/AudritoDVC16}, which are crucial for the
+correctness of the system.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\linewidth]{figures/field-computation.pdf}
+  \caption{Execution model of an Aggregate Computing system.}
+  \label{fig:field-computation}
+\end{figure}
 
 \subsection{Applications and critical aspects}
 
@@ -383,15 +419,15 @@ In Aggregate Computing, the main model of the system consists of a \emph{network
 intercommunicating devices}, which can be \emph{close} to one another therefore 
 introducing a concept of \textbf{neighborhood}. 
 %
-Each device is equipped with sensors and actuators, enabling interaction with an
-environment, and can communicate with other devices through a
-\emph{message-passing} system. 
+Each device is equipped with \emph{sensors} and \emph{actuators}, enabling
+interaction with an environment, and can communicate with other devices through
+a \emph{message-passing} system. 
 
 A key aspect of Aggregate Computing regards the execution model, which is based
 on a local program identical for all devices. The system is governed by a
-continuously executed loop that makes the devices \emph{receive messages},
-\emph{produce a result through their internal behavior} and finally \emph{send
-values to neighbors}. 
+continuously executed loop that makes the devices (1) \emph{receive messages},
+(2) \emph{produce a result through their internal behavior} and finally (3)
+\emph{send values to neighbors}. 
 %
 This simple structure allows for system to show self-organizing behaviors
 emerging from the \emph{collective} of devices, and contemplates even complex
@@ -399,7 +435,7 @@ interactions of the devices with the environment (e.g. creation of new devices).
 
 Finally, as already said, the \emph{field calculus} model can be implemented
 through an ad-hoc API and syntax to perform operations on a \emph{computational
-field} (i.e., a mapping from device locations to values in our example)
+field} (i.e., a mapping from device locations to values, in our example)
 manipulating it over time, defining interactions between devices and finally
 creating the emergent behavior.
 %
@@ -409,56 +445,76 @@ frontend plugin in this thesis: \emph{Collektive}.
 
 \section{Collektive: an Aggregate Computing framework}
 
-\emph{Collektive} is a modern Aggregate Computing framework developed in Kotlin 
-that allows developers to easily write Aggregate Computing programs through a 
-flexible \emph{internal} DSL. The framework is designed to be multiplatform,
-targeting both JVM and JavaScript platforms, as well as native ones. 
+\emph{Collektive} is a modern Aggregate Computing framework developed in Kotlin
+that allows developers to easily write Aggregate Computing programs (also called
+``aggregate programs'') through a flexible \emph{internal} \ac{DSL}. The
+framework is designed to be multiplatform, targeting JVM, JavaScript and
+native platforms.
 %
 Compared to some other existing Aggregate Computing frameworks, Collektive
-offers a modern and idiomatic approach to writing Aggregate Computing programs,
+offers a modern and idiomatic approach to writing aggregate programs,
 with a static type system (as it is internal to Kotlin) and few, expressive
-constructs like \lstinline{neighboring} and \lstinline{exchange}, which can be
+constructs like \code{neighboring} and \code{exchange}, which can be
 used to implement a broad variety of interactions between devices (and also
 Aggregate Computing patterns).
 
-The project is organized in modules, with the main one being the \lstinline{dsl}
-and \lstinline{compiler-plugin}, and is tested using the Alchemist simulator
+The project is organized in modules, with the main one being the \textbf{dsl}
+and \textbf{compiler-plugin}, and is tested using the Alchemist simulator
 \cite{DBLP:journals/jos/PianiniMV13}. 
 
 \subsection{Collektive DSL: main concepts} \label{sec:collektive-dsl}
 
 In order to understand how to work on Collektive programs, we first need to
-understand its main usage. Collektive DSL is centered around the
-\lstinline{aggregate} function, which is the entry point for the Aggregate
-Computing program. The function uses a local ID to identify the device on which
-is executed on and then accepts a function type with receiver
-\lstinline{compute: Aggregate<ID>.() -> R} that performs the aggregate
-computation using the \lstinline{Aggregate} interface members.
+understand its main usage. Note for the reader: during this explanation and in
+the rest of the document, a sufficient knowledge of the Kotlin programming
+language is necessary to grasp a large part of concepts exposed, and therefore
+will be assumed in many parts of the elaboration.
+
+Collektive DSL is centered around the \code{aggregate} function, which is the
+entry point for the aggregate program. The function uses a local ID to identify
+the device on which is executed on and then accepts a function as parameter that
+performs the aggregate computation using the \code{Aggregate} interface members.
 %
-The \lstinline{Aggregate} interface provides several functions that represent
-the main constructs of Collektive's implementation of the Aggregate Computing
-paradigm. The most important ones are:
+This interface provides several functions that represent the main constructs of
+Collektive's implementation of the Aggregate Computing paradigm. The most
+important ones are:
 \begin{itemize}
-  \item \lstinline{neighboring}: a function that observes expressions on
+  \item \code{neighboring}: a function that observes expressions on
   neighbors, returning the related field;
-  \item \lstinline{exchange}: a function that, taken from the documentation of
+  \item \code{exchange}: a function that, taken from the documentation of
   Collektive, ``manages the computation of values between neighbors in a
   specific context''. In practice, it can be used to compute a new field of 
   values starting from initial values of neighbors;
-  \item \lstinline{evolve}: updates an initial value iteratively computing an
+  \item \code{evolve}: updates an initial value iteratively computing an
   expression at each device;
-  \item \lstinline{share}: performs a field computation starting from neighbors'
+  \item \code{share}: performs a field computation starting from neighbors'
   values, reducing them to a single value and then sharing it with neighbors. 
   It can be used to actuate a ``space-time evolution'' on the field.
 \end{itemize}
 
 Some of these constructs is present also in a variant that allows to return a
-different type of value from the initial one; the name of the variant is 
-the same of the original function but with the suffix \lstinline{-ing} (e.g., 
-\lstinline{exchanging}, \lstinline{evolving} etc.).
+different type of value from the initial one; the name of the variant is the
+same of the original function but with the suffix \code{-ing} (e.g.,
+\code{exchanging}, \code{evolving} etc.). In \cref{lst:dsl-example} is shown an
+example of a Collektive program using the \ac{DSL}: it starts identifying each
+device using a \code{localId} and then shares the maximum value of the field
+with neighbors starting from an \code{initialValue}.
+
+\begin{lstlisting}[
+  float, 
+  language=Kotlin, 
+  label={lst:dsl-example},
+  caption={Example of a Collektive program using the DSL.}
+]
+aggregate(localId) {
+  share(initialValue) { field ->
+    field.max(field.localValue)
+  }
+}
+\end{lstlisting}
 
 Just by using these four constructs, already complex collective behaviors can
-be achieved. Besides that, the Collektive DSL hides several operations through
+be achieved. Besides that, the Collektive \ac{DSL} hides several operations through
 the already mentioned compiler plugin. 
 
 \subsection{Collektive Compiler Plugin}
@@ -466,12 +522,12 @@ the already mentioned compiler plugin.
 As previously introduced, Collektive provides an already integrated
 \textbf{backend compiler plugin}. This plugin is responsible for managing the
 \emph{alignment of aggregate computation}, a very important concept when dealing
-with Aggregate computing programs, faced in several studies
+with Aggregate Computing programs, faced in several studies
 \cite{DBLP:conf/forte/DamianiVPB15} \cite{DBLP:conf/saso/AudritoDVC16}.
 %
 Essentially, the domain alignment is a necessary step to ensure that when a
 device computes a value that depends on neighboring devices (e.g., through the
-\lstinline{neighboring} construct, which retrieves values from neighbors), those
+\code{neighboring} construct, which retrieves values from neighbors), those
 neighboring devices have computed the same expression in the same evaluation
 round. This guarantees that shared computations remain consistent across
 devices: it's necessary in order to \textbf{maintain consistency between field
@@ -483,14 +539,13 @@ or may be “blocked” from passing between devices evaluating the same functio
 Collektive \emph{backend} compiler plugins works by analyzing call sites and
 function definitions in the code, intercepting the ones that involve aggregate
 computation and that should, therefore, be ``aligned''. Essentially, this is
-done by looking at \lstinline{Aggregate} interface usage in functions,
+done by looking at \code{Aggregate} interface's usage in functions,
 especially when used as receiver, and visiting their declarations, wrapping
-aggregate constructs usages with special \lstinline{align} and
-\lstinline{dealign} functions that perform domain alignment under the hood.
+aggregate constructs usages with special \code{align} and
+\code{dealign} functions that perform domain alignment under the hood.
 %
-As we will see, this is not always automatic or safe in certain situations 
-(e.g., loops), and the frontend extension will take care of these extra 
-checks. 
+As it will be shown, this is not always automatic or safe in certain situations
+(e.g., loops), and the frontend extension will take care of these extra checks. 
 
 But how do Kotlin compiler plugins work in general? Before diving into the 
 core development of the frontend plugin, it is necessary to understand their
@@ -506,14 +561,14 @@ compiler architecture is divided into two sub-parts: the \emph{frontend} and the
 inspired from the work of \cite{moskala2023}, which provides a more
 comprehensive overview of the Kotlin compiler plugins architecture.}.
 %
-The frontend is independent of the target, and for this reason its output can be 
-reused when targeting different platforms. Currently, this part of the compiler 
-is being migrated to the new K2 version, which is supposed to be much more 
-efficient than the previous K1 version.
+The frontend is independent of the target, and for this reason its output can be
+reused when targeting different platforms. At the time of writing, this part of
+the compiler is being migrated to the new K2 version, which is supposed to be
+much more efficient than the previous K1 version.
 %
 The backend, on the other hand, is mostly specific to the target platform, and
 uses the output of the frontend to generate the final code. In reality, the
-backends for JVM, JS, Native, and WASM share some parts: that will be analyzed
+backends for JVM, JS and Native share some parts that will be analyzed
 later. The general structure is summarized in
 \cref{fig:kotlin-compiler-architecture}.
 
@@ -563,13 +618,12 @@ to generate the final code.
 As we can see in \cref{fig:kotlin-compiler-workflow}, there is still another
 process that hasn't been mentioned yet: the \emph{checkers}. During their stage
 of execution, the checkers can inspect the \ac{FIR} and reports different
-diagnostics. If some of them is considered ``critical'', in the sense that the
+diagnostics. If some of them is considered ``critical'', meaning that the
 compilation should not proceed (e.g., a type error), the compilation is stopped,
 and the backend is not executed: otherwise, the final \ac{IR} is passed to it.
 %
-The role of the checkers is particularly important in the context of this
-thesis, and the way it's possible to interact with them is by means of
-\textbf{extensions}.
+Checkers play a crucial role in this thesis, and interaction with them is made
+possible through \textbf{extensions}.
 
 \subsection{Extension mechanism}
 
@@ -579,8 +633,8 @@ code at the \ac{FIR} level or by modifying the backend \ac{IR}. These extensions
 enable advanced features such as additional type checks, automated code
 generation, and optimizations, empowering Kotlin’s extensibility.
 %
-Like with compiler stages, extensions can be either frontend or backend as well.
-While frontend extensions impact code analysis, syntax resolution, and IDE
+Like with compiler stages, extensions can be either frontend or backend as well:
+while frontend extensions impact code analysis, syntax resolution, and IDE
 support, backend extensions act right after the \emph{IR generation +
 optimization} phase seen in \cref{fig:kotlin-compiler-workflow}. This
 distinction makes frontend extensions more suitable for language-level changes
@@ -588,43 +642,44 @@ and linting rules, whereas backend extensions are primarily used for performance
 optimizations and bytecode transformations.
 
 K2 introduces multiple frontend extensions, all following the
-\lstinline{Fir[Name]Extension} convention. In relation to what was previously
-discussed, the \lstinline{FirAdditionalCheckersExtension} is particularly
+\emph{Fir [Name] Extension} convention. In relation to what was previously
+discussed, the \emph{Fir Additional Checkers Extension} is particularly
 important in this context, since it's a frontend extension that allows
 developers to register \emph{additional checkers} to run during compilation.
 These checkers can enforce custom coding rules, report warnings, or even prevent
-compilation by issuing errors. More over, errors and warnings generated by this
+compilation by issuing errors. Moreover, errors and warnings generated by this
 extension appear in IDEs like IntelliJ IDEA, improving real-time code feedback.
 This extension is used by Kotlin plugins like \emph{Kotlin Serialization},
 which ensures that serialization-related constraints are properly followed, and
 \emph{Arrow Meta}, which enforces functional programming best practices.
 
 The extension mechanism is also used in the backend, where backend plugins can
-intervene, but the extension that needs to be used in only one:
-\lstinline{IrGenerationExtension}. This extension is invoked after the \ac{FIR}
-phase has completed and the \ac{IR} has been generated. It allows modifications
-to the IR tree before it is used for bytecode generation. Because IR sits
-between the frontend and the platform-specific backend, changes made here can
-impact the generated machine code without altering the high-level source
-representation --- and, for this reason, it does not influence code analysis
-in \acp{IDE} like IntelliJ IDEA. This extension is widely used in performance-critical
+intervene, but the extension that needs to be used in only one: \emph{Ir
+Generation Extension}. This extension is invoked after the \ac{FIR} phase has
+completed and the \ac{IR} has been generated. It allows modifications to the IR
+tree before it is used for bytecode generation. Because IR sits between the
+frontend and the platform-specific backend, changes made here can impact the
+generated machine code without altering the high-level source representation ---
+and, for this reason, it does not influence code analysis in \acp{IDE} like
+IntelliJ IDEA. This extension is widely used in performance-critical
 applications. For instance, \emph{Jetpack Compose} leverages it to transform
 composable functions into an optimized internal representation. Similarly,
-\emph{Kotlin Serialization} uses it to generate serialization methods dynamically,
-ensuring they are both efficient and lightweight. However, modifying IR directly
-can introduce breaking changes if not handled carefully. Since IR
-transformations occur at a low level, even minor alterations can lead to
-unintended consequences, making this extension a powerful but complex tool.
+\emph{Kotlin Serialization} uses it to generate serialization methods
+dynamically, ensuring they are both efficient and lightweight. However,
+modifying \ac{IR} directly can introduce breaking changes if not handled
+carefully. Since \ac{IR} transformations occur at a low level, even minor
+alterations can lead to unintended consequences, making this extension a
+powerful but complex tool.
 
 \subsubsection{IR generation inside Collektive} \label{sec:ir-generation-collektive}
 
-Collektive backend plugin uses the \lstinline{IrGenerationExtension} to perform 
+Collektive backend plugin uses the \code{IrGenerationExtension} to perform 
 the operations we already discussed. To register an extension, the developer needs
-to declare a class that extends \lstinline{CompilerPluginRegistrar}. Inside that,
-the developer can register the extension using the \lstinline{registerExtension}
+to declare a class that extends \code{CompilerPluginRegistrar}. Inside that,
+the developer can register the extension using the \code{registerExtension}
 method that depends on the type of extension that is being registered. 
 %
-The core login of the plugin is then implemented in the extension itself. In the
+The core logic of the plugin is then implemented in the extension itself. In the
 case of the Collektive backend plugin, the class structure is summarized 
 in \cref{fig:extensions-class-diagram}.
 
@@ -636,12 +691,15 @@ in \cref{fig:extensions-class-diagram}.
   \label{fig:extensions-class-diagram}
 \end{figure}
 
-Finally, to include the plugin, a \lstinline{META-INF/services} file is needed,
-where the fully qualified name of the \lstinline{AlignmentComponentRegistrar} is
-written, and the plugin is wrapped in a Gradle plugin that can be applied to the
-project build. After the application of the frontend plugin also, the structure
-of the project's components will be the one described in
-\cref{fig:collektive-components-diagram}.
+Finally, to include the plugin, a \code{META-INF/services} file is needed, where
+the fully qualified name of the \code{AlignmentComponentRegistrar} is written,
+and the plugin is wrapped in a Gradle plugin that can be applied to the project
+build\footnote{Compiler plugins are, at the time of writing, supported only
+through the Gradle build system. For this and other reasons that regard the
+state of the Collektive project, future comments on the build environment will
+take the use of this tool for granted.}. After the application of the frontend
+plugin also, the structure of the project's components will be the one described
+in \cref{fig:collektive-components-diagram}.
 
 \begin{figure}
   \centering
@@ -676,15 +734,13 @@ the testing process as well), the development of a compiler plugin would be
 cumbersome and error-prone. 
 %
 Needless to say, a well-configured build tool is a fundamental requirement in
-this context. Within the Kotlin ecosystem --- on which this work focuses --- the
-most widely used build tool is \emph{Gradle}, and it will serve as the
-foundation for the implementations discussed in this thesis.
+this context.
 
 \subsection{Main motivations}
 
 Before diving into the development of the frontend plugin, let's briefly
 summarize the motivations behind the project. As previously mentioned, Aggregate
-computing is still a relatively new paradigm, and some studies
+Computing is still a relatively new paradigm, and some studies
 \cite{DBLP:conf/saso/AudritoDVC16} already pointed out subtle bugs that can
 occur when using some of its possible implementations. 
 %
@@ -695,9 +751,9 @@ frontend compiler plugin is motivated by three main reasons:
   and necessary for the correct functioning of the framework, the frontend
   plugin can be simply built on top of it, extending its functionalities and
   ensuring that the user's operations are safe and within the scope of
-  Collektive DSL correct usage principles.
+  Collektive \ac{DSL} correct usage principles.
 
-  \item \textbf{The presence of an internal DSL}: when building a DSL, a
+  \item \textbf{The presence of an internal DSL}: when building a \ac{DSL}, a
   developer must choose to make it \emph{internal} to a host language, like
   Kotlin, or \emph{external}, like Protelis \cite{DBLP:conf/saso/PianiniBV17},
   and so take care of the parsing and the compilation process in general.
@@ -720,11 +776,11 @@ frontend compiler plugin is motivated by three main reasons:
     developing specific \ac{IDE} plugins.
 
     \item \textbf{Build tools}: the Gradle plugin that is used to apply the
-    compiler plugin is pretty simple and needs almost zero modifications when
-    extending the compiler plugin, differently from what would happen in the
-    case of Gradle plugins wrapping external tools (e.g. \emph{ktlint}). This
-    means that it can be easily maintained and integrated into other Gradle
-    projects with low effort.
+    compiler plugin requires low effort to be developed and needs almost zero
+    modifications when extending the compiler plugin, differently from what
+    would happen in the case of Gradle plugins wrapping external tools (e.g.
+    \emph{ktlint}). This means that it can be easily maintained and integrated
+    into other Gradle projects with low effort.
 
     \item \textbf{Rest of the pipeline}: the frontend plugin can be developed 
     very closely to the rest of the Collektive framework through submodules,
@@ -1494,7 +1550,8 @@ appear as fragile or poorly maintainable code.
 This aspect is related to the ``defensive'' approach for developing these static
 checkers: one could think that detecting the pattern is the core of the
 implementation but, in reality, one of the most important aspects is
-\textbf{being careful not to introduce false positives} to the static analysis.
+\textbf{being careful not to introduce false
+positives}\cite{DBLP:journals/jss/LenarduzziPSLP23} to the static analysis.
 %
 This is logical, since the cases we are trying to capture are actually a very
 small subset of the possible programs using the Collektive DSL (and Kotlin in

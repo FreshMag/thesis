@@ -1292,19 +1292,19 @@ approach more complex cases with the visitor pattern.
 In order to prove the effectiveness of the visitor pattern in more complex cases,
 we will now present a more complex pattern that can be detected using this
 approach. This pattern regards the \emph{unnecessary usage of constructs} in the
-Collektive DSL.
+Collektive \ac{DSL}.
 
 Kotlin compiler won't, by default, warn the developer when an anonymous function
 that can have one or more parameters is created without using them in the body 
-(and maybe passed to another function as a parameter). For example in the code
+(and maybe passed to another function as a parameter). For example, in the code
 shown in the following snippet:
 
 \begin{lstlisting}[language=Kotlin]
 listOf(1, 2, 3).map { 5 }
 \end{lstlisting}
 
-The anonymous function passed to the \lstinline{map} function is not using the
-\lstinline{it} parameter and, in general, this cannot always be interpreted as
+The anonymous function passed to the \code{map} function is not using the
+\code{it} parameter and, in general, this cannot always be interpreted as
 an error because, depending on the function, the parameter might not be needed.
 %
 Some Collektive constructs, however, are designed to work with the parameters of
@@ -1313,14 +1313,16 @@ of misinterpretation of the construct's behavior and intended usage as well as
 an unnecessary network exchange that results in a waste of resources.
 
 Not all constructs behave in the same way: for example, the
-\lstinline{neighboring} and \lstinline{neighboringViaExchange} constructs are
+\code{neighboring} and \code{neighboringViaExchange} constructs are
 different from the rest. Since these two functions evaluate expressions in
 neighbors devices, if the expression to evaluate is provided as an anonymous
 function, this does not accept parameters. In this case, the construct usage is
 considered unnecessary if the anonymous function has an \emph{empty return} ---
-i.e., a return of type \lstinline{Unit}. 
+i.e., a return of type \code{Unit}. 
 %
-An example of both the cases is shown in \cref{lst:p4-example}.
+An example of both the cases is shown in \cref{lst:p4-example}. Note: the code 
+shows the usage of \emph{explicit} parameters, but the pattern is valid also
+when the parameters are used \emph{implicitly} (e.g., using the \code{it} keyword).
 
 \lstinputlisting[
   float, 
@@ -1332,35 +1334,26 @@ An example of both the cases is shown in \cref{lst:p4-example}.
 \subsubsection{Formal description}
 
 Given a Collektive construct that accepts an anonymous function as parameter,
-the pattern is satisfied when the body of the anonymous function does not use the
-parameters that its signature accepts \emph{or} when the body of the anonymous
-function returns \lstinline{Unit} in absence of accepted parameters (i.e., the
-\lstinline{neighboring} and \lstinline{neighboringViaExchange} constructs).
+the pattern is satisfied when the body of the anonymous function does not
+\emph{use} the parameters that its signature declares \emph{or} when the body of
+the anonymous function returns \code{Unit} in absence of accepted parameters
+(i.e., the \code{neighboring} and \code{neighboringViaExchange} constructs).
 
 \subsubsection{Design and Implementation}
 
-Similarly to the previous pattern, the checker will be implemented with a very
-simple logic, exploiting more complex visitors to inspect the pattern matching.
-In this case, the checker will simply check if a function call is one of the 
-Collektive constructs to check. If so, it will delegate the inspection on one
-of two visitors, whether the construct is one of the constructs that accept
-anonymous functions with parameters or not.
+Similarly to the previous pattern, the checker will be implemented with very
+little logic, exploiting more complex visitors to inspect the pattern matching
+and, for this reason, its implementation is omitted. In this case, the checker
+will only detect if a function call is one of the Collektive constructs to
+check. If so, it will delegate the inspection on one of two visitors, whether
+the construct is one that accept anonymous functions with parameters or not. 
 
-The implementation is summarized in \cref{lst:p4-checker}. As we can see, the
-two visitors are \lstinline{EmptyReturnVisitor} and
-\lstinline{ConstructCallVisitor}. The former is quite simple to implement (and,
-therefore, will be explained without code): it behaves like a default
-visitor, but when visiting a \lstinline{FirReturnExpression} element, it checks
-if the return type is \lstinline{FirUnitExpression}. If so, the pattern is
-detected.
-
-\lstinputlisting[
-  float, 
-  language=Kotlin, 
-  label={lst:p4-checker},
-  caption={Implementation of the Pattern 4 checker: 
-  \lstinline{UnnecessaryUseOfConstructs}}
-]{listings/P4Checker.kt}
+The two visitors are the \code{ConstructCallVisitor} and
+\code{EmptyReturnVisitor}. The latter's implementation is not particularly
+surprising compared to the previous visitor (and, therefore, will be explained
+without code): it behaves like a default visitor, but when visiting a
+\code{FirReturnExpression} element, it checks if the return type is
+\code{FirUnitExpression}. If so, the pattern is detected.
 
 The second visitor is more complex: when checking for usages of parameters, we
 \textbf{cannot simply check the return expression of the anonymous function} and
@@ -1368,17 +1361,18 @@ see if it uses the parameters, because the parameters can be used in other
 expressions to create \textbf{dependent symbols} --- i.e., symbols that depend
 on and can be used instead of the parameters in the return expression.
 %
-To solve this problem in a more simple way, the visitor will \textbf{not} check
-if the dependent symbols are used in the return expression, therefore
-implementing a \emph{symbol marking} system, but instead it will simply consider
-the pattern as detected once it sees at least one usage of the parameter inside
-the anonymous function body.  
+To solve this problem in a simpler way, the visitor will \textbf{not} check if
+the dependent symbols are used in the return expression, therefore implementing
+a \emph{symbol marking} system (i.e., a program that marks symbols inside
+expressions depending on their role, in this case dependent symbol), but instead
+it will simply consider the pattern as detected once it sees at least one usage
+of the parameter inside the anonymous function body.  
 
-The implementation of the \lstinline{ConstructCallVisitor} is shown in
-\cref{lst:p4-visitor}. The variable \lstinline{found} will be set to
-\lstinline{true} when the visitor encounters a usage of all parameters, meaning
-that the pattern is detected when \lstinline{!found}. This is the result
-obtained by the visitor calling its utility method shown in the checker. 
+The implementation of the \code{ConstructCallVisitor} is shown in
+\cref{lst:p4-visitor}. The variable \code{found} starts off with the value
+\code{true} and will be set to false when the visitor encounters a usage of all
+parameters. Its value is the result obtained by the visitor when used externally
+(i.e., in the checker).
 
 \lstinputlisting[
   float, 
@@ -1387,18 +1381,24 @@ obtained by the visitor calling its utility method shown in the checker.
   caption={Implementation of the Pattern 4 Visitor}
 ]{listings/P4Visitor.kt}
 
-The visitor approach works very well also in this case: the code is sufficiently
-readable and simple to understand. Even though the logic is more complex
-compared to the previous cases, however, we are not yet dealing with patterns
-that require to visit \textbf{more distant elements} in the \ac{FIR} tree, for
-example \emph{visiting the function declaration of a function call} or
-\emph{linking the usage of a symbol to its declaration}. 
+The visitor approach works sufficiently well also in this case: the code is able
+to perform checks for the pattern in a simpler way than it would have with the
+\ac{FIR} API alone. 
+%
+Even though the logic is more complex compared to the previous cases, however,
+we are not yet dealing with patterns that require to visit \textbf{more distant
+elements} in the \ac{FIR} tree, for example \emph{visiting the function
+declaration of a function call} or \emph{linking the usage of a symbol to its
+declaration}. 
 
 Despite these considerations, it is already possible to see some drawbacks of
 this approach: the code is already becoming less declarative, having to use
-\emph{flags} to keep track of the state of the visitor for example preventing
-some visit methods to be called in contexts we don't want them to be called
+\emph{flags} to keep track of the state of the visitor, for example preventing
+some visit methods to be called in contexts we do not want them to be called
 (e.g., in the visitor just presented, the case of nested anonymous functions). 
+%
+This approach would clearly benefit from a more structured and modular API to
+simplify this kind of logic.
 
 \section{4th approach: mixed approach}
 
@@ -1408,11 +1408,12 @@ use a mixed approach that combines the visitor pattern with the simple API we
 previously introduced. The main advantage over other static analysis tools, in
 fact, is that the tree we are visiting is already enriched with a lot of
 information that the visitor can use inside its visit methods to perform checks,
-therefore avoiding the need to visit the tree in a more complex way.
+therefore avoiding the need to visit the tree in a more complex way. Moreover,
+this information is the same used by the Kotlin compiler to compile the code.
 %
-We can also create utility functions that call other visitors to extract
-information useful for the checker or another visitor. Making this structure 
-modular and extensible is key for the success of this approach.
+We can also create utility functions that call other visitors to extract data
+useful for the checker or another visitor. Making this structure modular and
+extensible is key for the success of this approach.
 
 \subsection{Pattern 5: complex aggregate operations in loops} \label{sec:p5}
 
@@ -1427,9 +1428,9 @@ function is not necessarily a nested function, as in the case already seen in
 \cref{sec:p2}, but it can be a function that is defined elsewhere in the code:
 from now on, this will be called the \emph{delegated function} or simply the
 \emph{delegate}. In order to contain aggregate calls, the delegate must have a
-parameter of type \lstinline{Aggregate} to use as a receiver for the aggregate
+parameter of type \code{Aggregate} to use as a receiver for the aggregate
 constructs (if, instead the delegate would have an explicit receiver of type
-\lstinline{Aggregate}, in fact, the pattern would be trivially detected by the
+\code{Aggregate}, in fact, the pattern would be trivially detected by the
 Pattern 2 checker, as the delegate would appear as an aggregate construct
 itself).
 %
@@ -1452,22 +1453,26 @@ respect to Pattern 2.
 \subsubsection{Formal description}
 
 Given a looping construct (like the ones already seen for Pattern 2) and a
-declared function, here called \emph{delegate}, whose parameters list contains
-one of type \lstinline{Aggregate} and whose body contains an aggregate construct
-call, the pattern is satisfied when \emph{delegate} is called inside the loop or
-in a chain of other function calls that ends with a call inside the loop, and
-neither \emph{delegate} nor the functions in the chain contain an
-\lstinline{alignedOn} operation wrapping one of the calls.
+declared function, here called \emph{delegate}, that satisfies two requirements:
+\begin{enumerate}
+  \item Its signature accepts at least one parameter of type \code{Aggregate};
+  \item Its body contains an aggregate construct call.
+\end{enumerate}
+
+The pattern is satisfied when \emph{delegate} is called inside the loop or in a
+chain of other function calls that ends with a call inside the loop, and neither
+\emph{delegate} nor the functions in the chain contain an \code{alignedOn}
+operation wrapping one of the calls.
 
 \subsubsection{Design and Implementation}
 
 To implement this pattern, a new condition will be added to the checker seen in
 \cref{lst:p2-checker} that will handle the case of delegated functions. The new
 condition will perform the same checks as the previous one (i.e., is inside a
-looping construct and it is not aligned) but instead of checking if the function
-call being examined is an aggregate one, it will check if one of its parameters
-is of type \lstinline{Aggregate}. To do this, a new utility function is
-implemented: \lstinline{hasAggregateParameter}, shown in \cref{lst:p5-utility}.
+looping construct, and it is not aligned) but instead of checking if the
+function call being examined is an aggregate one, it will check if one of its
+parameters is of type \code{Aggregate}. To do this, a new utility function is
+implemented: \code{hasAggregateParameter}, shown in \cref{lst:p5-utility}.
 %
 \begin{lstlisting}[
   float, 
@@ -1481,19 +1486,19 @@ fun FirFunctionCall.hasAggregateArgument(): Boolean =
   } ?: false 
 \end{lstlisting}
 %
-This uses the \lstinline{getArgumentsTypes} and \lstinline{toFqNameUnsafe}
+This uses the \code{getArgumentsTypes} and \code{toFqNameUnsafe}
 extension methods that have been implemented for the job (and are omitted for
 brevity). 
 
-Once this condition is satisfied, the visitor will be called to
-inspect the delegate function and check if it contains an aggregate construct
-call or a call to another function that contains an aggregate construct call
-(possibly in a chain of calls). \textbf{Note:} we cannot use the code already
-implemented for Pattern 2 for checking the presence of the \lstinline{alignedOn}
-operation, since its call could be in a different function that is called inside
-the delegate and that is not directly one of the \emph{containing elements} of
-the aggregate construct call. For this reason, the visitor will be used also for
-this purpose.
+Once this condition is satisfied, the visitor will be called to inspect the
+delegate function and check if it contains an aggregate construct call or a call
+to another function that contains an aggregate construct call (possibly in a
+chain of calls). \textbf{Note:} we cannot reuse the existing code for Pattern 2
+to check for the presence of the \code{alignedOn} operation, as its invocation
+may occur within a different function that is called inside the delegate but is
+not directly one of the \emph{containing elements} of the aggregate construct
+call. Therefore, the presence of \code{alignedOn} will be verified within the
+visitor.
 
 To implement this visitor, we need a way to visit the function declaration
 associated with the function call that is being visited. Thanks to Kotlin API,
@@ -1510,28 +1515,28 @@ fun FirFunctionCall.getDeclaration(): FirSimpleFunction? =
   calleeReference.toResolvedFunctionSymbol()?.fir as? FirSimpleFunction
 \end{lstlisting}
 %
-The \lstinline{@OptIn} is necessary in order to access the \lstinline{fir}
+The \code{@OptIn} is necessary in order to access the \code{fir}
 field. Once this is done, we need to visit the function declaration and check
 its body for the pattern presence. In addition, however, we also need to be
 careful to detect \emph{nested function declarations}, and for this reason 
-a \lstinline{functionCounter} variable is used to keep track of the nesting
+a \code{functionCounter} variable is used to keep track of the nesting
 level of the function declarations. 
 %
 The other elements we need to visit are the function calls contained in the body
-of the function. The only functions we are interested in are of two types:
+of the delegate. The only functions we are interested in are of two types:
 
 \begin{enumerate}
   \item \textbf{Aggregate function calls}: function calls that require alignment
-  or \lstinline{alignedOn} operations;
+  --- i.e., \code{alignedOn} operations;
   \item \textbf{Function calls with aggregate parameter (i.e., delegates)}: this 
   functions could recursively contain dangerous function calls, so are targeted 
-  by other checks
+  by other checks.
 \end{enumerate}
 
 In the first case, we check if the function call is an alignment operation, and if
 so we accept its anonymous function parameter with the visitor keeping track that 
-we are inside an alignment (i.e., so other aggregate operations are considered safe
-within it). If the aggregate function is not an alignment operation and we are not
+we are inside an alignment, so other aggregate operations are considered safe
+within it. If the aggregate function is not an alignment operation and we are not
 \emph{inside an alignment or nested function}, the pattern is detected.
 
 In the second case we simply instantiate another visitor and recursively visit the
@@ -1550,7 +1555,7 @@ local variables from nested functions, similar to the second case shown in
 \cref{lst:p5-example} without alignment present, are difficult to capture with
 the current approach. Since it is not a common usage case, it was decided to
 leave it for future works. It is a good opportunity, however, to reason about
-how what it has been developed so far presents, from time to time, some
+how what has been developed so far presents, from time to time, some
 branching conditions in the code or some particular programming ``tricks'' that
 appear as fragile or poorly maintainable code. 
 %
@@ -1558,14 +1563,14 @@ This aspect is related to the ``defensive'' approach for developing these static
 checkers: one could think that detecting the pattern is the core of the
 implementation but, in reality, one of the most important aspects is
 \textbf{being careful not to introduce false
-positives}\cite{DBLP:journals/jss/LenarduzziPSLP23} to the static analysis.
+positives} \cite{DBLP:journals/jss/LenarduzziPSLP23} to the static analysis.
 %
-This is logical, since the cases we are trying to capture are actually a very
-small subset of the possible programs using the Collektive DSL (and Kotlin in
-general). This is also the reason why adding more complex checks like the one
-just described has to be taken with much caution, and it is of main importance
-to add \textbf{more tests for cases where the pattern is not detected} than for
-cases where it is detected.
+The cases we are trying to capture, in fact, are actually a very small subset of
+the possible programs using the Collektive \ac{DSL} (and Kotlin in general).
+This is also the reason why adding more complex checks like the one just
+described has to be taken with much caution, and it is of main importance to add
+\textbf{more tests for cases where the pattern is not detected} than for cases
+where it is detected.
 %
 The approach taken for testing this important factor will be discussed in the
 next chapter: for now, we will move to the final pattern, the one that was
@@ -1581,38 +1586,41 @@ used together to inspect the code.
  
 \subsection{Pattern 6: improper Evolve construct usage}
 
-The last pattern presented in this chapter involves three of the constructs of the 
-Collektive DSL that we have seen: \lstinline{evolve}, \lstinline{neighboring}
-and \lstinline{share} (and their variants with the yielding context).
-%
-The \lstinline{evolve} construct is used to evolve the value of a device,
+The last pattern presented in this chapter involves three of the constructs of
+the Collektive \ac{DSL} that we have seen: \code{evolve}, \code{neighboring} and
+\code{share} (and their variants with the yielding context). Since we have not
+really explained their behavior in detail, they will be briefly discussed here.
+
+The \code{evolve} construct is used to ``evolve'' the value of a device,
 iteratively updating it with the results of a function that is passed as a
-parameter. The \lstinline{neighboring} construct is used to evaluate an
-expression in neighbors, constructing a \lstinline{Field} object mapping the
-neighbors to the results of the evaluation. The \lstinline{share} construct is
-used to compute a \emph{space-time} evolution of the field, computing an
-expression over time and sharing it with the neighbors. Since the
-\lstinline{evolve} construct too can be used to evolve a field over time, its
-combination with the \lstinline{neighboring} construct can behave exactly like a
-\lstinline{share}, since the second one can be used to map the \emph{space}
-aspect. 
+parameter. This function accepts also an \emph{initial value}, from which
+starting the evaluation. The \code{neighboring} construct is used to evaluate an
+expression in neighbors, constructing a \code{Field} object mapping the
+neighbors to the results of the evaluation. The \code{share} construct is used
+to compute a \emph{space-time} evolution of the field, computing an expression
+over time and sharing it with the neighbors. Since the \code{evolve} construct
+too can be used to evolve a field over time, its combination with the
+\code{neighboring} construct can behave exactly like a \code{share}, since the
+second one can be used to map the \emph{space} aspect. 
 %
-This is not always true, of course, but using the \lstinline{evolve} construct
+This is not always true, of course, but using the \code{evolve} construct
 could easily lead to this inefficient usage of the DSL constructs,  especially
-if the developer is not aware of constructs like \lstinline{share}.
+if the developer is not aware of constructs like \code{share}.
 
-This pattern consists specifically in this type of usage of the \lstinline{evolve}
+This pattern consists specifically in this type of usage of the \code{evolve}
 construct. Since the anonymous function passed to it as a parameter must return
-a value of the same type of the one gave to it as \emph{initial} one, a user could
-first use the \lstinline{neighboring} construct to evaluate the expression in 
-neighbors and then perform a \emph{field reduction} operation --- e.g., finding the
-max value in the field --- and return that as the result of the anonymous function.
+a value of the \emph{same type} of the one gave to it as \emph{initial}, a
+user could first use the \code{neighboring} construct to evaluate the expression
+in neighbors and then perform a \emph{field reduction} operation --- e.g.,
+finding the max value in the field --- and return that as the result of the
+anonymous function.
 %
-Different is the case in which the \lstinline{neighboring} construct is used to 
-evaluate a different expression that \textbf{does not depend on the value updated
-by evolve} and therefore will share a value independently of the one evolved.
+Different is the case in which the \code{neighboring} construct is used to
+evaluate a \emph{different expression} that \textbf{does not depend on the value
+updated by evolve} and therefore will share a value independently of the one
+evolved.
 
-These examples of usage and related version with the \lstinline{share} construct 
+These examples of usage and the related version with the \code{share} construct
 substituted are shown in \cref{lst:p6-example}.
 
 \lstinputlisting[
@@ -1624,43 +1632,43 @@ substituted are shown in \cref{lst:p6-example}.
 
 \subsubsection{Formal description}
 
-Given an \lstinline{evolve} construct that is passed a function that contains a
-\lstinline{neighboring} construct, the pattern is satisfied when the expression
-evaluated by the \lstinline{neighboring} construct depends on the value of
-evolve, and it is used to compute the value returned by the anonymous function
-passed to the \lstinline{evolve} construct.
+Given an \code{evolve} construct, or its variant, that is passed a function that
+contains a \code{neighboring} construct, the pattern is satisfied when the
+expression evaluated by \code{neighboring} depends on the value of \code{evolve}
+--- i.e., the parameter inside the anonymous function --- and it is used to
+compute the value returned by the body of \code{evolve}.
 
 \subsubsection{Design and Implementation}
 
 The mixed approach previously introduced will be fully exploited to implement
 this checker. In order to \emph{trace the dependencies} between the expressions
 that relate to the evolved value --- i.e., the parameter inside the
-\lstinline{evolve} anonymous function --- we need a system to \emph{mark
-expressions} that use this value and then maintain a list of symbols that are
-dependent on the evolved value. 
+\code{evolve} anonymous function --- we need a system to \emph{mark expressions}
+that uses this value and then maintains a list of symbols that are dependent on
+the evolved value. 
 %
-When these symbols are used in other expressions, we then mark theses as
+When these symbols are used in other expressions, we then mark these as
 dependent on the evolved value as well and so on. When we encounter a
-\lstinline{neighboring} construct, we can immediately know if the expression
+\code{neighboring} construct, we can immediately know if the expression
 evaluated by it depends on the evolved value, and if not the check can
 immediately end.
 %
-If the expression depends on the evolved value, we must save the evaluated
-expression and continue the visit until the end of the anonymous function with
-the return expression. Obtained the return expression, we must first extract the 
-receiver of the \lstinline{yielding} construct if the aggregate construct used 
-is a variant with the yielding context, or simply the expression itself if not. 
+If the expression depends on the evolved value, instead, we must save the
+evaluated expression and continue the visit until the end of the anonymous
+function with the return expression. Obtained the return expression, we must
+first extract the receiver of the \code{yielding} construct if we are inside
+\code{evolving} and not \code{evolve}, or simply the expression itself if not. 
 %
 This extra step is necessary for the variants of the construct because the 
-value returned by the \lstinline{yielding} is not really relevant to the pattern
-detection, since it will be returned as it is either way. 
+value returned by the \code{yielding} is not really relevant to the pattern
+detection, since it will be returned externally as is.
 %
-Finally, we must check if the expression is \textbf{not} equivalent to the one
-evaluated by the \lstinline{neighboring} construct, and if so the pattern is
+Finally, we must check if the return expression is \textbf{not} equivalent to
+the one evaluated by the \code{neighboring} construct, and if so the pattern is
 detected. 
 
-Since the workflow is not straightforward, a diagram of the process is shown in
-\cref{fig:p6-workflow}.
+Since the workflow could appear as not really straightforward, a diagram of the
+process is shown in \cref{fig:p6-workflow}.
 %
 \begin{figure}
   \centering
@@ -1670,22 +1678,21 @@ Since the workflow is not straightforward, a diagram of the process is shown in
 \end{figure}
 %
 As for the previous patterns implemented using visitors, the implementation of
-the checker is quite simple and therefore omitted. The visitor, however, will
+the checker is quite similar and therefore omitted. The visitor, however, will
 need a specific section to be treated in detail. 
 
 \subsubsection{Visitor implementation}
 
 The first element the visitor is going to visit is, again, a function call
-corresponding to a Collektive \ac{DSL} construct, specifically the
-\lstinline{evolve} construct and its variant. In this case, the visitor will
-simply access the construct and look inside its parameters --- i.e., the 
-anonymous function. 
+corresponding to a Collektive \ac{DSL} construct, specifically the \code{evolve}
+one and its variant. In this case, the visitor will simply access the construct
+and look inside its parameters --- i.e., the anonymous function. 
 %
-When this is done, the visitor will switch to the visit
-method of the anonymous function, where first it will check if this function
-is a \textbf{top nesting level} and not a nested function (for the first 
-visit it obviously is) and will access the \textbf{function parameters} and
-add them to a list of \emph{dependent symbols} kept by the visitor.
+When this is done, the visitor will switch to the visit method of the anonymous
+function, where first it will check if this function is at \textbf{top nesting
+level} and not a nested function (for the first visit it obviously is) and will
+access the \textbf{function parameters} and add them to a list of
+\emph{dependent symbols} kept by the visitor.
 %
 In \cref{lst:p6-visit-anonymous} this procedure is shown.
 %
@@ -1697,9 +1704,9 @@ In \cref{lst:p6-visit-anonymous} this procedure is shown.
 ] 
 override fun visitAnonymousFunctionExpression(anonymousFunctionExpression: FirAnonymousFunctionExpression) {
   if (nestingLevel == 0) {
-      val anonymousFunction = anonymousFunctionExpression.anonymousFunction
-      val parameters = anonymousFunction.valueParameters
-      parametersDeclarations = parameters.map { it.symbol }
+    val anonymousFunction = anonymousFunctionExpression.anonymousFunction
+    val parameters = anonymousFunction.valueParameters
+    parametersDeclarations = parameters.map { it.symbol }
   }
   nestingLevel++
   super.visitAnonymousFunctionExpression(anonymousFunctionExpression)
@@ -1708,10 +1715,10 @@ override fun visitAnonymousFunctionExpression(anonymousFunctionExpression: FirAn
 \end{lstlisting}
 %
 The visitor will then visit the body of the anonymous function. Every time the
-visitor encounters a \lstinline{FirResolvedNameReference}, corresponding to a
+visitor encounters a \code{FirResolvedNameReference}, corresponding to a
 symbol usage, it will check if the symbol is contained in the list of dependent
-symbols. If so, the visitor will set a variable \lstinline{markExpression} to
-\lstinline{true}, meaning that the expression is dependent on the evolved value.
+symbols. If so, the visitor will set a variable \code{markExpression} to
+true, meaning that the expression is dependent on the evolved value.
 %
 In this way, when the visitor encounters a property (i.e., local variable), it
 will check if the expression is marked as dependent and, if so, it will add the
@@ -1725,48 +1732,48 @@ property to the list of dependent symbols. This is shown in
   caption={Visitor methods to implement a symbol and expression marking system}
 ]
 override fun visitResolvedNamedReference(ref: FirResolvedNamedReference) {
-    if (ref.resolvedSymbol in parametersDeclarations ||
-        ref.resolvedSymbol in tracedDependentSymbols
-    ) {
-        markExpression = true
-    }
+  if (ref.resolvedSymbol in parametersDeclarations ||
+      ref.resolvedSymbol in tracedDependentSymbols
+  ) {
+    markExpression = true
+  }
 }
 
 override fun visitProperty(property: FirProperty) {
-    if (markExpression) {
-        tracedDependentSymbols += property.symbol // add the symbol to the list
-        markExpression = false
-    }
+  if (markExpression) {
+    tracedDependentSymbols += property.symbol // add the symbol to the list
+    markExpression = false
+  }
 }
 \end{lstlisting}
 %
 These methods take care of the tracing of the dependent symbols, now it is
-necessary to approach the core of the visitor: the \lstinline{neighboring} and
+necessary to approach the core of the visitor: the \code{neighboring} and
 return expressions. 
 
 The first one can be inspected when the visitor encounters a function call, and
 then check for the fully-qualified name of the construct. In that case, we can
-extract the expression used as parameter to the construct and perform the
-necessary checks. The \lstinline{neighboring} construct can be used essentially
-in two ways:
+extract the expression used as parameter of the function and perform the
+necessary checks. The \code{neighboring} construct can be used essentially in
+two ways:
 \begin{enumerate}
-  \item \textbf{Direct expression}: for example a numerical expression like a
+  \item \textbf{Direct expression}: for example, a numerical expression like a
   sum between two numbers;
-  \item \textbf{Computation}: for example an anonymous function, in that case
-  the field returned by the construct has the computation as a result, in the 
-  form of a field of functions.
+  \item \textbf{Computation}: for example, an anonymous function. In that case
+  the field returned by the construct has the ``computation'' as a result, in
+  the form of a field of functions.
 \end{enumerate}
 
-In the first case, we can simply obtain the first argument of the construct,
-verify if the expression is \emph{marked} when visiting it and, if so, set a
-variable that \textbf{contains the expression for later}. In the second case, we
-must visit the anonymous function and obtain the return expression, and then
-perform the same operations. To do this, a utility function is implemented that
-\textbf{extracts the return expression of an anonymous function using another
-visitor}. The implementation is shown in \cref{lst:p6-support-visitor}. In this
-case, we create a visitor on the fly and visit the anonymous function, returning
-the expression found. This is an example of how composing visitors with the
-\ac{FIR} API can work.
+In the first case, we can obtain the first argument of the construct, verify if
+the expression is \emph{marked} when visiting it and, if so, save the expression
+into a variable for later. In the second case, we must first visit the anonymous
+function and obtain the return expression, and then perform the same operations.
+To do this, a utility function is implemented that \textbf{extracts the return
+expression of an anonymous function using another visitor}. The implementation
+is shown in \cref{lst:p6-support-visitor}. As shown, we create a visitor on the
+fly and visit the anonymous function, returning the expression found. This is an
+example of how composing visitors with the \ac{FIR} API can help detecting a
+pattern.
 
 \lstinputlisting[
   float, 
@@ -1776,18 +1783,18 @@ the expression found. This is an example of how composing visitors with the
   function}
 ]{listings/P6SupportVisitor1.kt}
 
-Once we saved the expression evaluated by the \lstinline{neighboring} construct,
+Once we have saved the expression evaluated by the \code{neighboring} construct,
 a comparison with the return expression of the anonymous function is needed to
 complete the detection of the pattern. When the visitor encounters the return
 expression, it must first check if the nesting level is correct and if the
-expression of the \lstinline{neighboring} construct if present. If not, the
-pattern is skipped. Finally, to compare the return expression with the
-expression of the construct using the \lstinline{isStructurallyEquivalentTo}
-utility function previously introduced, we must handle a last special case: the
-yielding context. 
+expression of the \code{neighboring} construct if present. If not, the pattern
+is skipped. Finally, to compare the return expression with the one we previously
+saved, we can use the \code{isStructurallyEquivalentTo} utility function already
+introduced. However, the check is not finished since we must also handle a
+special case: the yielding context. 
 
 In the case of the yielding context, the expression returned by the
-\lstinline{yielding} construct is not relevant to the pattern detection, and so
+\code{yielding} construct is not relevant to the pattern detection, and so
 its \textbf{receiver} must be used instead. To get the receiver, another support 
 visitor is implemented, shown in \cref{lst:p6-support-visitor2}.
 
@@ -1799,9 +1806,9 @@ visitor is implemented, shown in \cref{lst:p6-support-visitor2}.
 ]{listings/P6SupportVisitor2.kt}
 
 The visitor is used in the visit method of the return expression, performing the
-final check on the equivalence of the expressions. If the expressions are not
-equivalent, the pattern is detected. The implementation of this last visit method 
-is shown in \cref{lst:p6-visit-return}.
+final check on the equivalence of the expressions. If these are not equivalent,
+the pattern is detected. The implementation of this last visit method is shown
+in \cref{lst:p6-visit-return}.
 
 \begin{lstlisting}[
   float, 
@@ -1811,7 +1818,7 @@ is shown in \cref{lst:p6-visit-return}.
 ]
 override fun visitReturnExpression(returnExpression: FirReturnExpression) {
   super.visitReturnExpression(returnExpression)
-  if (neighboringExpression != null && nestingLevel == 1) {
+  if (neighboringExpression != null && isCorrectNestingLevel()) {
     val expressionToCheck = neighboringExpression as FirExpression
     if (constructNameFQName == EVOLVING_FUNCTION_FQ_NAME) {
       // case with yielding context
@@ -1828,12 +1835,14 @@ override fun visitReturnExpression(returnExpression: FirReturnExpression) {
 }
 \end{lstlisting}
 
-With this, all the patterns that were considered for the Collektive DSL static
-analysis have been implemented. As discussed in this chapter, many approaches
-were taken and in some cases mixed together to achieve the desired results.
-Since the presented patterns were not shown in their order of implementation, it
-is possible to see some areas of improvement, especially in the first
-ones implemented using the visitor pattern. 
+\subsubsection{Final considerations}
+
+With this last visitor, all the patterns that were considered for the Collektive
+\ac{DSL} static analysis have been implemented. As discussed in this chapter,
+many approaches were considered through the development, and in some cases mixed
+together to achieve the desired results. Since the presented patterns were not
+shown in their order of implementation, it is possible to see some areas of
+improvement, especially in the first ones implemented using the visitor pattern. 
 %
 Other considerations about this development process as well as other possible 
 ways to implement the checkers will be matter of discussion in the conclusions 

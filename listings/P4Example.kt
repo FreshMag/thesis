@@ -1,13 +1,13 @@
 // example with anonymous function that takes parameter (pattern detected)
-evolve(initial) { it ->
-    // but `it` is not used inside the body
+evolve(initial) { value ->
+    // but `value` is not used inside the body
 		10
 }
 
 // example with anonymous function that takes parameter (pattern not detected)
-evolve(initial) { it ->
-		// `it` is used inside the body
-		it + 10
+evolve(initial) { value ->
+		// `value` is used inside the body
+		value + 10
 }
 
 // example of a parameter-less anonymous function (pattern detected)

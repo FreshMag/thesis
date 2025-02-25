@@ -819,7 +819,7 @@ this chapter are \emph{experimental}, and therefore subject to possible instabil
 and frequent changes. The code snippets and examples provided are based on the
 current state of the Kotlin compiler at the time of writing. 
 
-\section{Adopted workflow}
+\section{Adopted workflow} \label{sec:workflow}
 
 After defining the \code{CollektiveFrontendExtensionRegistrar} class that
 wraps the frontend plugin, already introduce in \cref{sec:ir-generation-collektive}, the
@@ -1855,27 +1855,30 @@ these checkers' implementation will be presented.
 %----------------------------------------------------------------------------------------
 
 When developing tools that need to inspect and modify source code, where
-developers have freedom to write code in many ways and leveraging the full power of the 
-used programming language, a solid and comprehensive testing strategy is crucial to 
-ensure that the tool is working as expected and that it is able to capture all the
-cases that it is supposed to capture.
+developers have freedom to write code in many ways and leveraging the full power
+of the used programming language, a solid and comprehensive testing strategy is
+crucial to ensure that the tool is working as expected and that it is able to
+capture all the cases that it is supposed to capture.
 %
 If static analysis tools can be tedious to develop, due to the need to cover a
-plethora of possible cases, often with a unified meta-level approach, testing
-static analysis tools must be even more comprehensive and flexible than
-development, trying not to fall into verbosity and repetition.
+plethora of possible cases often with a unified approach, testing static
+analysis tools must be even more comprehensive and flexible than development,
+trying not to fall into verbosity and repetition.
 
-In this chapter we will present the testing strategy that was adopted to test the 
-Collektive frontend plugin, starting from the initial approaches and moving into the 
-development of an \emph{ad-hoc} testing framework named \emph{Subjekt}.
+In this chapter we will present the testing strategy that was adopted to test
+the Collektive frontend plugin, starting from the initial approaches and moving
+into the development of an \emph{ad-hoc} testing framework named \emph{Subjekt}.
+Several snippets will be shown in this chapter: a basic understanding of the
+\emph{Kotest} framework, the one used in the project, is required to fully
+understand them.
 
 \section{Initial testing approaches}
 
-The first approach taken was the most trivial: the tests were written using
+The first approach taken was the simplest one: the tests were written using
 \textbf{static Kotlin sources} as resource files, loading them in the test
-suites written using the Kotlin test framework \textbf{Kotest}. The first
-problem that arose regarded the \emph{compilation process and the check for
-resulting diagnostics}. To test the checkers, in fact, the code must be compiled
+suites written using the Kotlin testing framework Kotest. The first problem that
+arose regarded the \emph{compilation process and the check for resulting
+diagnostics}. To test the checkers, in fact, the code must be compiled
 programmatically also providing the plugin to the compiler, and then collect all
 the produced messages and compare them with the expected ones.
 %
@@ -1883,26 +1886,28 @@ Fortunately, a library already exists for this purpose: \textbf{Kotlin Compile
 Testing} by Thilo Schuchort (tschuchortdev on GitHub)\footnote{The actual
 library that was used is a fork of the original one, maintained by Zac Sweers
 (ZacSweers on GitHub). The switch to the fork was necessary due to some issues
-encountered during the building process of the project with Kotlin 2.0 which,
-at the time of writing, is still not supported by the original library. More
+encountered during the building process of the project with Kotlin 2.0 which, at
+the time of writing, is still not supported by the original library. More
 information is available here:
-\url{https://github.com/tschuchortdev/kotlin-compile-testing/issues/411}}.
-This library provides a simple way to create objects that represent Kotlin source
-files by passing a string source code, and then compile them giving a list of
+\url{https://github.com/tschuchortdev/kotlin-compile-testing/issues/411}}. This
+library provides a simple way to create objects that represent Kotlin source
+files by passing a string source code, and then compiles them giving a list of
 compiler plugins or annotation processors that should be used during the
-compilation process. All of this is done \emph{inheriting the class path} of
-where the compilation process is running, so the Collektive plugin can be added
-without any problem also adding the corresponding library. Finally, the
-diagnostics produced are contained inside the
-\lstinline{KotlinCompilation.Result} object as a single string that can be
-easily split and filtered to get the relevant messages and compare them with the
-expected ones.
+compilation process. 
+%
+All of this is done \emph{inheriting the class path} of where the compilation
+process is running, so the Collektive plugin can be added without any problem
+also using the corresponding library. Finally, the diagnostics produced are
+contained inside the \code{KotlinCompilation.Result} object as a single string
+that can be easily split and filtered to get the relevant messages and compare
+them with the expected ones.
 
-With this library, it is now possible to write tests simply by reading the
+With this library, it is now possible to write tests only by reading the
 resource files that contain the source code that should result or not in a
 pattern being detected. These testing cases should be the same that were
-extracted from the codebase during the development of the checkers. An example
-of a test suite using this method can be seen in \cref{lst:initial-test-suite}.
+extracted from the codebase during the development of the checkers, as explained
+in \cref{sec:workflow}. An example of a test suite using this method can be seen
+in \cref{lst:initial-test-suite}.
 %
 \lstinputlisting[
   float, 
@@ -1912,35 +1917,36 @@ of a test suite using this method can be seen in \cref{lst:initial-test-suite}.
   static resource files to load the source code to be compiled and checked}
 ]{listings/TestingExample1.kt}
 %
-As we can see, the testing process is quite simple and straightforward:
-\lstinline{TestAggregateInLoop.kt} is a source file contained in the resource
+As we can see, the testing process is quite short and sufficiently clear:
+\code{TestAggregateInLoop.kt} is a source file contained in the resource
 folder and contains a simple source code with an aggregate construct used inside
 a loop, which is the case that should be detected by the checker for Pattern 2.
 
-It appears quite clear however, how this approach soon proves to be un-scalable
-and especially very repetitive, as for the same pattern to be tested there are
-many possible source codes in which the checker might have to operate (and
-therefore cases to be tested) and where the difference with the previous ones
-is, in most cases, a line or two of code. 
+As one might expect, however, this approach quickly proves to be \textbf{not
+scalable} and \textbf{highly repetitive}. For a single pattern, there can be
+numerous variations in source code where the checker must operate, resulting in
+many test cases. In most instances, the differences between these cases amount
+to only a line or two of code.
 %
-Following this method, the test suite would have needed many static files, each
-very similar to some others, and the Kotest spec would have been very verbose,
-even trying to minimize the repeated parts through the use of Kotest utility
-functions like \lstinline{forAll}.
+Following this method, the test suite would have required numerous static files,
+many of which would be nearly identical. Additionally, the Kotest specification
+would have become excessively verbose, even when leveraging Kotest utility
+functions like \code{forAll} to minimize redundancy.
 
 \section{Avoiding repetitions through template files}
 
 One of the first solutions to the problem of repetition when dealing with
 textual files very similar to each other is to use \textbf{template files}. The
-approach is quite simple: for each pattern to test, collapse all the testing
+approach is the following: for each pattern to test, collapse all the testing
 cases that are similar to each other into a single file containing placeholders
-for the parts that change. 
+for the parts that change, and then dynamically replace these placeholders with
+the correct values during the test execution.
 
 \subsection{Initial template system}
 
 The initial template system consisted of simple Kotlin files containing the
 source code to be compiled with placeholders like the ones used in classical
-string formatting --- i.e., \lstinline{%s}. An example is shown in 
+string formatting --- i.e., \code{\%s}. An example is shown in 
 \cref{lst:template-file}. 
 %
 \lstinputlisting[
@@ -1955,12 +1961,11 @@ replace the placeholders cycling through a list of possible, hard-coded
 configurations in the test suite and for each perform the correct check on the
 diagnostics produced.
 %
-In addition, we extracted a small utility in order to make the process of
+In addition, a small utility was extracted in order to make the process of
 reading resources, compiling and comparing messages more concise and readable
-using Kotlin infix methods.
-The result looks similar to the one shown in \cref{lst:template-test-suite}.
-Only a relevant part of the test suite is shown, the rest is omitted for
-brevity.
+using Kotlin infix methods. The result looks similar to the one shown in
+\cref{lst:template-test-suite}. Only a relevant part of the test suite is shown,
+the rest is omitted for brevity.
 
 \lstinputlisting[
   language=Kotlin, 
@@ -1978,10 +1983,10 @@ mechanism that allows configurable parts without repeated and obscure code for
 formatting. 
 %
 This allows to write templates that are more clear and readable, because instead
-of writing placeholders with \lstinline{%s} we can write variables with names 
-like \lstinline{%(nameOfTemplateVariable)} and then pass a configurable map 
+of writing placeholders with \code{\%s} we can write variables with names 
+like \code{\%(nameOfTemplateVariable)} and then pass a configurable map 
 through the test code that will replace these variables with the correct values.
-All of these utilities, contained in the singleton object \lstinline{CompileUtils},
+All of these utilities, contained in the singleton object \code{CompileUtils},
 permit writing tests like the ones shown in \cref{lst:template-revised-suite}.
 %
 \lstinputlisting[
@@ -1992,15 +1997,17 @@ permit writing tests like the ones shown in \cref{lst:template-revised-suite}.
 ]{listings/TestingExample3.kt}
 %
 Variables also have default values, making the tests more concise and easier to
-write. It is easy to see how the test not only gained in readability, but it is
-much more scalable and can be used to test many more cases adding only a few
-lines of code. 
+write. 
 
+The test methodology not only gained in readability, but it is much more
+scalable and can be used to test many more cases adding only a few lines of
+code. 
+%
 The obtained result, however, is still far from optimal: the testing code still
 depends too much on the structure of the template files, exploiting hard-coded
 names of variables inside the template files and in the test suite. The problem
-still relies on the fact that \textbf{the testing resource doesn't encapsulate
-the possible values of its variable}, making it more flexible indeed but also
+still relies on the fact that \textbf{the testing resource does not encapsulate
+the possible values of its variables}, making it more flexible indeed but also
 less maintainable and more error-prone. 
 %
 Without using a system more similar to a \emph{template engine}, it would be
@@ -2022,10 +2029,10 @@ configuration in the tests to capture a multitude of cases, declaratively
 specifying how the source code should be structured and therefore knowing at
 prior what the expected diagnostics should be.
 %
-It is quite clear that the task is not an easy one, since generating multiple 
-source codes in a declarative way using the same programming language as the
-target one is not trivial. Thankfully, an already existing and well-known 
-library can be used for the generation: \textbf{Kotlin Poet} by Square Inc.
+The task is certainly not an easy one, since generating multiple source codes in
+a declarative way using the same programming language as the target one is not
+trivial. Thankfully, an already existing and well-known library can be used for
+the generation: \textbf{Kotlin Poet} by Square Inc.
 
 Kotlin Poet is a library with a Java and Kotlin API to generate Kotlin sources.
 Its main use cases are generating code for annotation processors or interacting
@@ -2049,7 +2056,7 @@ lines of code, using constructs tailored for our testing cases.
 %
 Take the extensions shown in \cref{lst:poet-extensions} for example: in this
 case we create utilities to build programs with blocks and specific wrapping
-functions, like the \lstinline{alignedOn} seen in \cref{sec:p2} during the
+functions, like the \code{alignedOn} seen in \cref{sec:p2} during the
 explanation of Pattern 2. 
 %
 \lstinputlisting[
@@ -2060,7 +2067,7 @@ explanation of Pattern 2.
 ]{listings/KotlinPoetMethods.kt}
 %
 This way, the developer can pass other extension methods --- e.g., parameter
-\lstinline{content} visible in \cref{lst:poet-extensions} --- to these
+\code{content} visible in \cref{lst:poet-extensions} --- to these
 \ac{DSL}-like keywords to highly customize the final output, therefore 
 maintaining Kotlin Poet benefits but also making it more directed to 
 our needs. 
@@ -2079,12 +2086,12 @@ in \cref{lst:poet-test-suite}.
 Imagining various checks to be done for Pattern 2 --- the one the examples of
 this chapter are based on --- this approach greatly reduces the amount of
 boilerplate code, intervening only inside the function containing the call
-to the aggregate construct and the loop construct, and then customizing it 
-with other parts, like the \lstinline{alignedOn} construct that wraps the 
+to the aggregate and loop constructs, and then customizing it 
+with other parts, like the \code{alignedOn} construct that wraps the 
 tested function call. 
 %
 At last, the expected diagnostics are formulated starting from the case that is
-being generated and tested and compared with the one produced by the compilation
+being generated then tested and compared with the one produced by the compilation
 thanks to the Kotlin Compile Testing library already cited. 
 %
 This last operation is encapsulated inside the small utility library already
@@ -2094,12 +2101,13 @@ function to the source code: this summarizes what is done at line 18 of
 
 \subsection{Considerations}
 
-The approach of code generation seems to be the most flexible and scalable 
-solution to the problem at hand: even though it wasn't considered worth the 
-effort to integrate a system like this in the first stages of the development,
-patterns examined further in the thesis showed how many possible cases 
-required a proper a more complete testing strategy without falling into
-verbosity and repetition (e.g., Pattern 5 and Pattern 6).
+Considering the context of this project, the approach of code generation seems
+to be the most flexible and scalable solution to the problem at hand: even
+though it was not considered worth the effort to integrate a system like this in
+the first stages of the development, patterns examined further in the thesis
+showed how many possible cases required a proper a more complete testing
+strategy without falling into verbosity and repetition (e.g., Pattern 5 and
+Pattern 6).
 %
 Nevertheless, more complex test cases, where more than just a couple of lines of
 code change, still require considerable effort to create Kotlin sources subject
@@ -2123,8 +2131,8 @@ plugin in a more comprehensive way.
 
 \emph{Subjekt} is a tool for generating textual results starting from a
 configuration in YAML or JSON format. It can be used to generate multiple
-results from permutations of parameters of the configuration, easily creating
-many variations of the same output.
+results from permutations of parameters defined in the configuration, easily
+creating many variations of the same output.
 %
 This tool started as a simple utility to generate multiple Kotlin sources from a
 starting configuration and then integrate them inside Collektive test projects.
@@ -2141,8 +2149,8 @@ projects like the Collektive frontend plugin.
 
 The main inspiration behind Subjekt is the testing strategy used by the
 \emph{Scala}
-compiler\footnote{\url{https://github.com/scala/scala3/tree/main/tests}} (on
-a smaller scale of course).
+compiler\footnote{\url{https://github.com/scala/scala3/tree/main/tests}}
+(re-invented on a smaller scale).
 % 
 Essentially, the core idea is to set up a suite of \emph{test cases} having
 expected positive or negative outcomes. In the Scala compiler, source code and
@@ -2166,16 +2174,16 @@ values, where the latter contain \textbf{Expressions}: strings with expressions
 are called \textbf{Resolvables}. 
 %
 The expressions are strings that are parsed to generate a multitude of results:
-\emph{Subjekt} will extract these results and produce a set of outputs
+\emph{Subjekt} will extract these results and produce a \emph{set} of outputs
 considering all the permutations of the expressions contained in the subjects.
-Special delimiters \lstinline|${{| and \lstinline|}}| are used in order to
+Special delimiters \code{\$\{\{} and \code{\}\}} are used in order to
 extract expressions from strings, inspired by the GitHub actions expressions
 syntax\footnote{
 \url{https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions}
 }.
 %
-The diagram in \cref{fig:subjekt-structure} shows the general class diagram of 
-the library.
+The diagram in \cref{fig:subjekt-structure} shows the class diagram of the
+general concepts of the library.
 
 \begin{figure}
   \centering
@@ -2188,27 +2196,28 @@ The main entities that produce permutations are \textbf{Parameters} and
 \textbf{Macros}. Both of them can have multiple values to substitute in the
 expressions where they are used, but the difference is that the former's values
 do not contain other expressions, while the latter's ones are actually other
-Resolvables and can accept arguments to substitute in their expressions ---
-i.e., a kind of function that returns multiple values --- leading to an
-exponential growth of the number of results (for example when other Parameters
-are passed to the Macro, making Subjekt produce permutations of the passed
-Parameter's values and the Macro's ones).
+Resolvables and can accept arguments to substitute in their expressions, similar
+to a function that returns multiple values, leading to an exponential growth
+of the number of results (for example, when other Parameters are passed to the
+Macro, making Subjekt produce permutations of the passed Parameter's values and
+with Macro's ones).
 %
-When a Resolvable needs to be resolved, the Subjekt library will determine all
-the possible \textbf{Contexts} that can be generated from the Parameters and
+When a Resolvable needs to be ``resolved'', the library will determine
+all the possible \textbf{Contexts} that can be generated from the Parameters and
 Macros. Each Context will contain one ``fixed'' value for each of them --- i.e.,
-\textbf{DefinedParameter} and \textbf{DefinedMacro} --- and will therefore 
+\textbf{DefinedParameter} and \textbf{DefinedMacro} --- and will therefore
 correspond to one of the total permutations.
 %
 The Resolvable will finally produce one \textbf{Instance} for each of the
 Contexts.
 
-The final result are the \textbf{ResolvedSubjects}. Each of these is
-essentially one of the generated outputs, and can be used to contain one of the
-source codes to be compiled and the expected diagnostics to be checked.
+The final results are the \textbf{ResolvedSubjects}. Each of these is
+essentially one of the generated outputs, and can be configured to contain one
+of the source codes to be compiled and the expected diagnostics to be checked.
 %
-The output is actually a set of these object to avoid testing the same case
-multiple times in case of collisions due to the permutations of the expressions.
+The output is actually a \emph{set} of these objects to avoid testing the same
+case multiple times in case of collisions, due to the permutations of the
+expressions.
 
 \subsection{Final usage inside tests}
 
@@ -2222,21 +2231,20 @@ expected ones.
 
 Ultimately, the Kotlin Compile Testing library was abandoned in favor of a
 custom solution that uses a utility singleton named
-\lstinline{CollektiveK2JVMCompiler} that automatically compiles a list of source
-files returning the diagnostics produced via a \lstinline{MessageCollector} and
-using the Collektive compiler plugin. 
+\code{CollektiveK2JVMCompiler} that automatically compiles a list of source
+files returning the diagnostics produced via a \code{MessageCollector} and using
+the Collektive compiler plugin. 
 
 In \cref{lst:subjekt-suite} a small example of a simple Subjekt configuration
-used for the tests of Pattern 2 is shown. In this configuration
-\lstinline{loop}, \lstinline{prettify} and \lstinline{AGGREGATE} are
-respectively two Macros and one Parameter that are omitted for brevity. The
-first one wraps the argument with several types of iteration constructs, for
-example a \lstinline{for} loop or a \lstinline{map} method call on a list. The
-second is a Macro exposed by Subjekt in all its configurations and that is used
-to concatenate any number of arguments into a camel case, special
-characters-free formatted string. The last one is a Parameter that contains a
-list of aggregate construct to be tested in the source code (e.g.,
-\lstinline{neighboring}).
+used for the tests of Pattern 2 is shown. In this configuration \code{loop},
+\code{prettify} and \code{AGGREGATE} are respectively two Macros and one
+Parameter that are omitted for brevity. The first one wraps the argument with
+several types of iteration constructs, for example a \code{for} loop or a
+\code{map} method call on a list. The second is a Macro exposed by Subjekt in
+all of its configurations and that is used to concatenate any number of
+arguments into a camel case, special characters-free formatted string. The last
+one is a Parameter that contains a list of aggregate constructs to be tested in
+the source code (e.g., \code{neighboring}).
 
 \lstinputlisting[
   float, 
@@ -2245,11 +2253,11 @@ list of aggregate construct to be tested in the source code (e.g.,
   caption={Example of a Subjekt configuration file used for Pattern 2 testing.}
 ]{listings/SubjektExample.yaml}
 
-The configuration file is then loaded inside the test suite, and the subjects
-are resolved and executed. The expected diagnostics are then compared with the
-ones produced by the compilation, and the test is considered successful if they
-match. In \cref{lst:subjekt-test-suite} a small snippet of the test suite using
-Subjekt is shown.
+The configuration file is then loaded inside the test specification, and the
+subjects are resolved and executed. The expected diagnostics are then compared
+with the ones produced by the compilation, and the test is considered successful
+if they match. In \cref{lst:subjekt-test-suite} a small snippet of the test
+suite using Subjekt is shown.
 
 \lstinputlisting[
   language=Kotlin,
@@ -2257,14 +2265,14 @@ Subjekt is shown.
   caption={Example of a test suite using Subjekt}
 ]{listings/TestingExample5.kt}
 
-As we can see, the test suite is quite concise and readable, and can be easily
-expanded to test more cases by adding more configurations to the resource file.
-Moreover, inside the Kotest specification the developer does not have to worry
-about the details of the source being compiled or the diagnostics produced and,
-with an appropriate implementation of the check, if a test fails it is easy to
-immediately see the source code that caused the failure and the expected
-diagnostics that were not produced, leading to an efficient test-driven
-development cycle.
+As we can see, the test suite is more concise and readable compared to previous
+approaches, and can be easily expanded to test more cases by adding more
+configurations to the resource file. Moreover, inside the Kotest specification
+the developer does not have to worry about the details of the source being
+compiled or the diagnostics produced and, with an appropriate implementation of
+the check, it is relatively easy to immediately see the source code that caused
+an eventual failure and the expected diagnostics that were produced or not,
+leading to an efficient test-driven development cycle.
 
 Subjekt is still a small library that can be expanded and improved in order to
 make the creation of tests even more automatized and with less repetitions, but
@@ -2285,15 +2293,15 @@ tools via compiler plugins in general.
 
 \section{Opportunities of Compiler plugins}
 
-Compiler plugins represent a very powerful tool for developers that want to
-customize a specific ``environment'' within a framework written in a general
+Compiler plugins could represent a very powerful tool for developers that want
+to customize a specific ``environment'' within a framework written in a general
 purpose language. If brought to a sufficient degree of integration, they can
-embrace the full power of \emph{internal} \acp{DSL}, breaking some remaining
+greatly enhance \emph{internal} \acp{DSL} capabilities, breaking some remaining
 barriers between the domain and the host language. If added to an automatically
 integrated static analysis tool like a frontend compiler plugin, it can also
-help developers to avoid common obstacles to the adoption of new tools and 
+help developers to avoid common obstacles to the adoption of new tools and
 ``languages'' in their projects, speeding up the learning process of the new
-constructs and the spreadness of new paradigms.
+constructs and spreading new paradigms' usage.
 
 In this thesis, the development of the Collektive frontend plugin showed an
 example of how this can be approached in a real use case, and how the
@@ -2317,12 +2325,12 @@ Finally, using a unified approach to the static analysis tool development, in
 this case the frontend compiler plugin, can greatly facilitates the inclusion 
 of such a tool in the development environment, making it interact with the 
 \ac{IDE} and build system automatically and without the need of additional
-\ac{IDE} plugin or other types of necessary integrations, often developed by
+\ac{IDE} plugins or other types of necessary integrations, often developed by
 third parties and not always up-to-date with the latest versions of the
-frameworks.
+framework.
 
 In order to show a solid development process of such a plugin, covering the
-full spectrum of the cycle, more effort was put into building an effective
+full spectrum of the cycle, notable effort was put into building an effective
 testing strategy that could be used to test also a bigger number of patterns
 even more complex than the ones presented in this thesis. This led to the 
 exploration of different testing approaches, each one with its own pros and
@@ -2380,7 +2388,7 @@ to developers, leveraging the full power of this type of system.
 Other than that, allowing compiler plugins to use configuration files already
 used by other tools like \emph{Detekt} would strenghten the idea of the unified
 approach even more, making the compiler plugin approach an interesting choice 
-as a standards for static analysis tools on the Kotlin platform.
+as a standard for static analysis tools on the Kotlin platform.
 
 Another possible future work could involve the testing method, expanding the
 automatized approach taken with the Subjekt framework to be more inclusive and
@@ -2401,7 +2409,6 @@ into the mainstream.
 Empowering developers to use these tools more seamlessly across this vast
 landscape of platforms and projects could unlock their true hidden potential,
 turning them into a powerful asset rather than a niche solution.
-
 
 
 %----------------------------------------------------------------------------------------

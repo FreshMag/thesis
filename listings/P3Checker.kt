@@ -1,5 +1,4 @@
 object UnnecessaryYielding : FirFunctionCallChecker(MppCheckerKind.Common) {
-	private val constructs = // Fully-qualified names of constructs using the YieldingContext
 
 	private fun FirFunctionCall.usesAnUnnecessaryYieldingContext(): Boolean =
 		with(YieldingUnnecessaryUsageVisitor()) {
@@ -7,11 +6,11 @@ object UnnecessaryYielding : FirFunctionCallChecker(MppCheckerKind.Common) {
 		}
 
 	override fun check(
-			expression: FirFunctionCall,
-			context: CheckerContext,
-			reporter: DiagnosticReporter,
+		expression: FirFunctionCall,
+		context: CheckerContext,
+		reporter: DiagnosticReporter,
 	) {
-		if (expression.fqName() in constructs 
+		if (expression.fqName() in constructs // FQ names of the yielding operations
 					&& expression.usesAnUnnecessaryYieldingContext()) {
 			// report as in the other checkers
 		}

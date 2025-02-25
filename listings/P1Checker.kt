@@ -14,6 +14,5 @@ object ExplicitAlignDealign : FirFunctionCallChecker(MppCheckerKind.Common) {
             )
         }
     }
-
 	// ... 
 }

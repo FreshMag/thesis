@@ -731,10 +731,10 @@ Considering all of this, it is important to mention the role of build tools in
 the development process of a compiler plugin. Without a seamless integration of
 the compiler plugin during the compilation process (and, as it will be shown,
 the testing process as well), the development of a compiler plugin would be
-cumbersome and error-prone. 
+cumbersome and error-prone due to integration steps that are not automated.
 %
-Needless to say, a well-configured build tool is a fundamental requirement in
-this context.
+A well-configured build tool appeared as a fundamental requirement in the
+context of this thesis.
 
 \subsection{Main motivations}
 
@@ -804,9 +804,9 @@ the frontend plugin inside the Collektive project.
 
 In this chapter, we will first present the general workflow of the plugin's
 checkers, then we will proceed presenting several \textbf{patterns} that were
-detected observing the Collektive DSL codebase. These patterns represent bad or
-inappropriate use cases of the Collektive DSL that are \textbf{not} captured by 
-default. 
+detected observing the Collektive \ac{DSL} codebase. These patterns represent
+bad or inappropriate use cases of the Collektive \ac{DSL} that are \textbf{not}
+captured by default. 
 %
 The way these patterns will be presented does not follow the chronological order 
 of their development, but rather an order with an increasing level of complexity.
@@ -821,12 +821,12 @@ current state of the Kotlin compiler at the time of writing.
 
 \section{Adopted workflow}
 
-After defining the \lstinline{CollektiveFrontendExtensionRegistrar} class that
+After defining the \code{CollektiveFrontendExtensionRegistrar} class that
 wraps the frontend plugin, already introduce in \cref{sec:ir-generation-collektive}, the
 first step is to register the actual extensions to the compiler using the
-\lstinline{configurePlugin} method. For this plugin, the extension that will
-be used is the already cited \lstinline{FirAdditionalCheckersExtension}, which
-allows to register additional checkers to run during compilation.
+\code{configurePlugin} method. For this plugin, the extension that will
+be used is the already cited \emph{Fir Additional Checkers Extension}, which
+allows registering additional checkers to run during compilation.
 %
 This extension can contain an arbitrary number of checkers, each of them
 assigned to different elements of the \ac{FIR} tree (e.g., expressions,
@@ -846,55 +846,55 @@ From this point on, the workflow of the plugin development will be as follows:
 \begin{enumerate}
   \item \textbf{Pattern detection}: when a new pattern that needs to be captured
   by the plugin is detected, several examples of Collektive programs expecting a
-  positive or negative  diagnostic are written (i.e., respectively, cases in
-  which the diagnostic should be reported and cases where it shouldn't).
+  positive or negative diagnostic (i.e., cases in which the diagnostic should be
+  reported and cases where it should not) are written;
   \item \textbf{Test arrangement}: the examples previously written are used to 
   create a test suite that will be used as certification of the pattern's correct
-  capture., following a \ac{TDD} approach.
+  capture, following a \ac{TDD} approach;
   \item \textbf{Checker creation and implementation}: a new checker is created and
   added to the frontend extension, implementing the logic that will detect and 
-  correctly report positives of the pattern's usages.
-  \item \textbf{Adjustments and identification of corner cases (optional)}: during
-  the checker's development some corner cases may arise that need to be handled 
-  by this checker and added as regression tests. In this case, after the corner 
-  cases are correctly identified, this goes back to step 2, working on the already
-  created checker.
+  correctly report positives of the pattern's usages;
+  \item \textbf{Adjustments and identification of corner cases (optional)}:
+  during the development of a checker, certain corner cases may emerge that
+  require handling and should be added as \emph{regression tests}. Once these
+  cases are properly identified, the process loops back to step 2, refining and
+  extending the existing checker accordingly.
 \end{enumerate}
 
-In this chapter we will present these steps for each pattern except for the step
-2, that will be covered in \cref{chap:evaluation}. 
+In this chapter, we will present these steps for each pattern, except for step
+2, which will be covered in \cref{chap:evaluation}.
 
-\textbf{Note}: the code snippets that will be presented in the following
-sections, if not appropriately specified in the code, present portions of code
-that are \textbf{inside an Aggregate block}, therefore contained either in a
-function that has the \lstinline{Aggregate} interface as receiver or in a 
-\lstinline{aggregate} entry point block, since these are the places where 
-the Collektive DSL can be used to specify aggregate behaviors. This has been
-done for the sake of brevity and clarity.
+\textbf{Note}: Unless explicitly stated otherwise in the code, the snippets
+presented in the following sections are assumed to be \textbf{inside an
+Aggregate block}. This means they are either within a function that has the
+\code{Aggregate} interface as its receiver or inside an \code{aggregate} entry
+point block, as these are the designated contexts where the Collektive \ac{DSL}
+can be used to specify aggregate behaviors. This choice has been made to enhance
+brevity and clarity.
 
 \section{1st approach: direct Kotlin API usage}
 
 The API that Kotlin provides to interact with the \ac{FIR} is sufficiently
-powerful to be used to perform a wide range of operations and checks. The
-first approach to the development of the checkers was to use this API directly,
+powerful to be used to perform a wide range of operations and checks. The first
+approach to the development of the checkers was to use this API directly,
 without the need of any additional constructs or classes. This approach is the
-most direct and simple, but it was used only for the simplest pattern, without a
-very complex logic behind it.
+most direct, but it was used only for the pattern with the lowest complexity.
 
 \subsection{Pattern 1: explicit align/dealign}
 
-One of the first pattern detected was the explicit usage of the
-\lstinline{align} and \lstinline{dealign} functions of the Collektive DSL. These
-functions are not supposed to be used directly by the developer because they are
-already managed by the backend plugin, and their direct usage can lead to
-inconsistent behavior and unexpected results. For how the Collektive DSL is
-structured, it was not possible to prevent the usage of these functions directly
-through the API, so the frontend plugin was put in charge of this task.
+One of the first pattern detected is the \emph{explicit usage of the}
+\code{align} \emph{and} \code{dealign} \emph{functions} of the Collektive
+\ac{DSL}. These functions are not supposed to be used directly by the developer
+because they are already managed by the backend plugin, and their direct usage
+can lead to inconsistent behavior and unexpected results. For how the Collektive
+\ac{DSL} is structured, it was not possible to prevent the usage of these
+functions directly through the API's design, so the frontend plugin was put in
+charge of this task.
 
 \subsubsection{Formal description}
 
-Given two functions \lstinline{align} and \lstinline{dealign} available in the
-\lstinline{Aggregate} interface, the pattern is satisfied when any of these
+Given two functions \code{align} and \code{dealign} available in the
+\code{Aggregate} interface, the pattern is satisfied when any of these
 functions are used explicitly in the code. \Cref{lst:p1-example} shows an
 example of this pattern.
 
@@ -907,43 +907,47 @@ example of this pattern.
 
 \subsubsection{Design and Implementation}
 
-One of the type of checkers available among \ac{FIR} checkers is the
-\lstinline{FirFunctionCallChecker}, which is just a type alias for a
-\lstinline{FirExpressionChecker} --- that is, a checker that takes care of
-expressions in the code --- typed with a \lstinline{FirFunctionCall} --- i.e.,
-an element of the \ac{FIR} tree representing a function call in the code. This
-type of checker can inspect function calls usages, calling the \lstinline{check}
-method of the checker with a \lstinline{FirFunctionCall} as parameter. 
+One of the type of checkers available among \ac{FIR} checkers is the \emph{Fir
+Function Call Checker}, which is just a type alias for a
+\code{FirExpressionChecker} --- that is, a checker that takes care of
+expressions in the code --- typed with a \code{FirFunctionCall} --- i.e., an
+element of the \ac{FIR} tree representing a function call in the code. This type
+of checker can inspect function calls usages, calling the \code{check} method of
+the checker with a \code{FirFunctionCall} as parameter. 
 %
 To performs checks on the function call, we can inspect the properties of this
-parameter. In this case we simply need to \textbf{compare the fully qualified
+parameter. In this case we only need to \textbf{compare the fully qualified
 name} of the function with the one of the interested functions.
 
 Getting the fully qualified name of the function is not directly supported by
-the \ac{FIR} API, but it is possible to build a simple utility function that
-retrieves it. The final implementation of the checker is shown in
-\cref{lst:p1-checker}: some portions of the code are omitted for brevity.
+the \ac{FIR} API, but it is possible to build a small utility function that
+retrieves it (whose implementation is omitted). The final implementation of the
+checker is shown in \cref{lst:p1-checker}: some portions of the code are omitted
+for brevity.
 
 \lstinputlisting[
   float, 
   language=Kotlin, 
   label={lst:p1-checker},
-  caption={Implementation of the Pattern 1 checker: \lstinline{ExplicitAlignDealign}}
+  caption={Implementation of the Pattern 1 checker: \code{ExplicitAlignDealign}}
 ]{listings/P1Checker.kt}
 
-The \lstinline{context} object is an instance of \lstinline{CheckerContext} and is 
-used to provide contextual information to the checker.
+The \code{context} object is an instance of \code{CheckerContext} and is 
+used to provide contextual information to the checker. We will see how to 
+use this object in the next sections.
 
-The \lstinline{reportOn} method of the \lstinline{reporter} object is used to
-report a diagnostic when the pattern gets detected. The parameter passed to this
-method determine where the diagnostic is gonna be reported (i.e., the position
-in the code) and the message shown to the user (in these checkers, specified
-inside an object called \lstinline{FirCollektiveErrors}).
+The \code{reportOn} method of the \code{reporter} object is used to report a
+diagnostic when the pattern gets detected. The parameter passed to this method
+determine where the diagnostic is going to be reported (i.e., the position in
+the code) and the message shown to the user (in these checkers, specified inside
+an object called \code{FirCollektiveErrors}). It is possible to see that the 
+checker is quite general, as it can be used to detect the presence of any 
+function call with a specific name.
 
 \section{2nd approach: declarative and modular API}
 
-Even though the API available in the checker is flexible and already powerful,
-it can be quite verbose if we need to implement utilities even for simple
+Even though the API available in the checker is flexible and feature-rich, it
+can appear quite verbose if we need to implement utilities even for simple
 operations like obtaining the fully qualified name of a function. To simplify
 the development of the checkers and make them more modular, a small API was
 developed to make declarative checks on the \ac{FIR} tree. This API is composed
@@ -959,40 +963,40 @@ shown in \cref{lst:simple-api}.
   caption={Some utility functions of the simple API developed}
 ]{listings/SimpleApi.kt}
 
-As we can see, we can perform checks on the \ac{FIR} tree using built-in methods
-like \lstinline{containingElements}: we can use this method to check if a
-\lstinline{FirElement} is contained inside a function that has a \emph{receiver
-parameter} of a certain type, in this case the \lstinline{Aggregate} type, by
+As shown, we can perform checks on the \ac{FIR} tree using built-in methods like
+\code{containingElements}: we can use this method to check if a
+\code{FirElement} is contained inside a function that has a \emph{receiver
+parameter} of a certain type, in this case the Aggregate one, by
 inspecting the name of the \emph{Class-like Symbol} (i.e., the symbol referred
 to a class or similar entities like interfaces) to which it is related. 
 %
-Encapsulating this not really trivial operations in functions makes them still
-reusable and declarative in the context of domain-specific checkers like the
-ones we are developing. This greatly empowers the Kotlin \ac{FIR} API, making it
-more interesting also for more complex cases that will be presented later.
+Encapsulating this composed operations in functions makes them still reusable
+and declarative in the context of domain-specific checkers like the ones we are
+developing. This greatly empowers the Kotlin \ac{FIR} API, making it more
+interesting also for more complex cases that will be presented later.
 
 \subsection{Pattern 2: simple aggregate operations in loops} \label{sec:p2}
 
 The second pattern that was inspected is the usage of \emph{aggregate operations
 inside loops}. This pattern is more complex because it reflects cases that are
 not always inappropriate usages, but if not properly handled can lead to
-problems during the alignment phase. 
+problems during the \emph{alignment} phase. 
 %
 When an aggregate construct (i.e., a function call that needs alignment between
-devices) is called inside a loop (e.g. a \lstinline{for} loop), the alignment of
+devices) is called inside a loop (e.g. a \code{for} loop), the alignment of
 the computation fails because multiple devices are not able to align to the same
 ``instance'' of the call between the iterations. 
 %
 However, the alignment can succeed if the loop contains a \emph{custom alignment
-operation}, that can be done using the \lstinline{alignedOn} method, which is
-available inside the \lstinline{Aggregate} interface. This method accepts an
-anonymous function that will be the subject of the alignment. 
+operation}, that can be done using the \code{alignedOn} method, another
+construct of the \ac{DSL}. This method accepts an anonymous function that will
+be the subject of the alignment. 
 %
-Again, this behavior cannot be captured through the internal DSL alone, so the
-frontend plugin is needed to handle this case. 
+Again, this behavior cannot be captured through the internal \ac{DSL} alone, so
+the frontend plugin is needed to handle this case. 
 
 It could seem that this pattern is not overly complex to detect compared to the
-previous one, but in reality just adding one more simple constraint makes the
+previous one, but in reality just adding one more small constraint makes the
 range of possible cases that can be captured following this pattern much broader
 and more varied. Consider the cases presented in \cref{lst:p2-corner-case}. 
 \lstinputlisting[
@@ -1009,10 +1013,11 @@ in fact:
   inside the loop, it is not directly called by the loop itself, but by a nested
   function. Note that even though this can be seen as a corner case, this is
   valid Kotlin code and might appear, maybe as slightly modified versions of
-  this one, in real use cases.
-  \item In the second case, we have the required \lstinline{alignedOn} operation
+  this one, in real use cases;
+  \item In the second case, we have the required \code{alignedOn} operation
   wrapping the Aggregate function call, but it is placed outside the loop,
-  making the alignment operation useless.
+  making the alignment operation useless (since the multiple calls inside the
+  loop will still not be aligned);
   \item In the third case, the loop is done without alignment, but this is in
   fact correct because the construct is not iterated by the loop since a new
   aggregate instance is created at each iteration. This makes each of them
@@ -1020,21 +1025,23 @@ in fact:
 \end{itemize}
 
 Many more cases regarding this pattern can be found, but some of these will be
-presented as another, separated pattern in \cref{sec:p5}. For now, we will deal
-with the simpler cases, described in the following, more formal description.
+presented as another, separated pattern in \cref{sec:p5}, both because it was 
+treated in a separated moment during the development and since the growth in
+complexity is not negligible. For now, we will deal with simpler cases,
+described in the following, more formal description.
 
 \subsubsection{Formal description}
 
-Given a construct that loops through various iterations (e.g., a \lstinline{for}
-statement, an anonymous function called when cycling collection elements like
-\lstinline{map}, \lstinline{forEach} etc.) \emph{inside} an ``aggregate'' block,
-the pattern is satisfied when an aggregate construct is used under one of the
-following conditions:
+Given a construct that loops through various iterations (e.g., a \code{for}
+statement, an anonymous function called when cycling collection's elements, like
+\code{map}, \code{forEach} etc.) \emph{inside} an ``aggregate'' block, the
+pattern is satisfied when an aggregate construct is used \emph{inside the loop
+body} satisfying both the following conditions:
 \begin{enumerate}
-  \item The construct is called inside this loop without a wrapping
-  \lstinline{alignedOn} operation \emph{inside the loop} as well;
-  \item The construct is called inside this loop as part of a static declaration
-  (e.g., a nested function) whose use is not iterated by the loop.
+  \item There is no \code{alignedOn} operation that wraps the construct inside
+  the loop;
+  \item The construct is \textbf{not} part of a nested static declaration (e.g.,
+  a nested function) whose use is not iterated by the loop.
 \end{enumerate}
 
 \subsubsection{Design and Implementation}
@@ -1042,36 +1049,36 @@ following conditions:
 The description might still seem incomplete or vague to some extent, and the
 reason is that some potential cases are still not captured. For now, though, the
 developed checker will be able to capture the most common cases, and the rest,
-as we will see, will be easily integrated when covering the Pattern 5. 
+as we will see, will be integrated when covering the Pattern 5. 
 
 One possible way to approach this pattern is reasoning in terms of
 \textbf{containing blocks}: starting from the aggregate function called, we
 could be able to determine if the pattern is detected or not just by looking at
 the \textbf{sorted list of containing blocks of the function call}. Starting
 from there, we first inspect if a loop is, in fact, containing the function
-call, and if so, we check for other elements like the presence of the
-\lstinline{alignedOn} in the correct order. This procedure is summarized in
+call, and if so, we check for other elements, like the presence of the
+\code{alignedOn}, in the correct order. This procedure is summarized in
 \cref{fig:p2-flowchart}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=.6\linewidth]{figures/p2-flowchart.pdf}
+  \includegraphics[width=.5\linewidth]{figures/p2-flowchart.pdf}
   \caption{Flowchart representing the procedure to detect Pattern 2}
   \label{fig:p2-flowchart}
 \end{figure}
 
-As we can see from the flowchart, the procedure ends immediately if the function
-name is one of \lstinline{alignedOn}, \lstinline{align} or \lstinline{dealign},
-since these are functions that do not require alignment. Thanks to Kotlin 
-nullability system, we can perform these subsequent checks in a declarative way,
-adding utilities to the simple API that we previously introduced and making it 
-more extensible for more checks like this.
+As we can see from the diagram, the procedure ends immediately if the function
+name is one of \code{alignedOn}, \code{align} or \code{dealign}, since these are
+functions that do not require alignment. Thanks to Kotlin nullability system, we
+can perform these subsequent checks in a declarative way, adding utilities to
+the API that we previously introduced and making it more extensible for other
+checks like this.
 %
 We first add these simple functions shown in \cref{lst:p2-api} to the API, and
 then we can finally implement the checker, as shown in \cref{lst:p2-checker}. 
+Many portions of the code are omitted for brevity.
 
 \lstinputlisting[
-  float, 
   language=Kotlin, 
   label={lst:p2-api},
   caption={Utility functions added to help in the detection of Pattern 2}
@@ -1081,57 +1088,60 @@ then we can finally implement the checker, as shown in \cref{lst:p2-checker}.
   float, 
   language=Kotlin, 
   label={lst:p2-checker},
-  caption={Implementation of the Pattern 2 checker: \lstinline{NoAlignInsideLoop}}
+  caption={Implementation of the Pattern 2 checker: \code{NoAlignInsideLoop}}
 ]{listings/P2Checker.kt}
 
 As we can already see, implementing a checker with this approach has several
-advantages: the code is readable and modular, and the logic is
-declarative and easier to understand. This approach is also extensible and
-can be easily adapted to other patterns that require similar checks.
+advantages: the code is more readable and modular, and the logic is sufficiently
+declarative and easier to understand. This approach is also extensible and can
+be adapted to other patterns that require similar checks.
 %
-This is, however, a very particular case that can be caught simply by looking at
+This is, however, a very particular case that can be caught only by looking at
 containing elements. Once the pattern becomes more complex, adding concepts like
-\emph{symbol's usage references} or \emph{structured operations with particular
-requirements}, like nested anonymous calls or simply subsequent statements that
-appear in the code that need to be checked together, this approach quickly
-becomes less effective and more verbose, as it requires a very effective and
-carefully designed API that cover as many cases as possible. 
+\emph{symbol's usage references} or \emph{structured operations with specific
+requirements}, for example nested anonymous calls or subsequent statements that
+need to be checked together, this approach quickly becomes less effective and
+more verbose, as it requires a very effective and carefully designed API that
+cover as many cases as possible. 
 %
-It becomes quite clear that covering corner cases and patterns that reflect many
-possible \ac{FIR} trees needs an approach that is more suitable to this kind of
-data structures.
+During the development of the rest of the checkers, it appeared natural to cover
+corner cases and patterns that reflect many possible \ac{FIR} trees with an
+approach more suitable to this kind of data structures.
 
 \section{3rd approach: visitor pattern}
 
-One of the main design patterns that can be used to traverse a tree-like data 
-structure is the \emph{visitor pattern}. This pattern is particularly useful 
+One of the main design patterns that can be used to traverse a tree-like data
+structure is the \emph{visitor pattern}. This pattern is particularly useful
 when the tree structure is complex and the operations that need to be performed
-on it are varied and not easily encapsulated in a single class.
+on it are varied and not easily encapsulated in a single class. It is no
+coincidence that many of the available static analysis tools use this kind of
+approach \cite{DBLP:journals/jss/LenarduzziPSLP23}.
 %
 The visitor pattern well fits the context of the Kotlin \ac{FIR}, since the
 structure resembles the one of the \ac{AST} built by the Kotlin parser. 
 Visitors are naturally used during the compilation process even if we don't
 explicitly define any, since the compiler itself needs to traverse the tree to
-perform the various operations that are needed to compile the code.
+perform the various operations needed to compile the code.
 %
-Moreover, Kotlin provides a set of utilities that can be used to implement
+Kotlin provides a set of utilities that can be used to implement
 Visitors that fit the developer needs and that can be easily integrated into the
-checkers in order to explore the \ac{FIR} structure behind the
-\lstinline{FirElements} that are passed to the checkers.
+checkers, in order to explore the \ac{FIR} structure behind the
+\code{FirElements} (i.e., the nodes of the tree) that are passed to the
+checkers.
 
 Kotlin \ac{FIR} visitors are automatically generated inside the Kotlin compiler 
-code in order to have a specific method for each type of \lstinline{FirElement}
+code in order to have a specific method for each type of \code{FirElement}
 that can be used to visit that element. All that is left to the developer is to
 choose which type of visitor to extend in order to implement their own:
 
 \begin{itemize}
-  \item \lstinline{FirVisitor<R, D>}: a visitor where each visit method accepts
-a \lstinline{D} parameter that can be used to pass data between the visit calls,
-and a return type \lstinline{R} that can be used to return a result from the 
-visitor.
-  \item \lstinline{FirVisitorVoid}: a visitor where each visit method accepts
+  \item \code{FirVisitor<R, D>}: a visitor where each visit method accepts
+a \code{D} parameter that can be used to pass data between the visit calls,
+and a return type \code{R} that can be used to return a result from the 
+visitor;
+  \item \code{FirVisitorVoid}: a visitor where each visit method accepts
 only the element to visit and returns nothing. Under the hood is simply a 
-\lstinline{FirVisitor<Unit, Nothing?>}.
+\code{FirVisitor<Unit, Nothing?>}.
 \end{itemize}
 
 Depending on the specific task assigned to the visitor, the developer will
@@ -1150,27 +1160,27 @@ structure is summarized in the class diagram of
 \subsection{Pattern 3: unnecessary Yielding usage}
 
 Having introduced the visitor pattern, we can now see it in practice having 
-to deal with the next pattern, whose implementation in the checkers exploited
+to deal with the next pattern, whose implementation in the checkers exploits
 \ac{FIR} visitors. This pattern regard the \emph{unnecessary usage of the} 
-\lstinline{yielding} \emph{contexts} in the Collektive DSL. 
+\code{yielding} \emph{contexts} in the Collektive \ac{DSL}. 
 %
-The \lstinline{yielding} context is a specific feature inside the Collektive
+The \code{yielding} context is a specific feature inside the Collektive
 \ac{DSL}, briefly introduced in \cref{sec:collektive-dsl}, that allows the
-developer to call a construct of the \ac{DSL}, like \lstinline{exchange} for
+developer to call a construct of the \ac{DSL}, like \code{exchange} for
 instance, returning a value different from the result of the construct. To use
 this feature, instead of using the actual construct, the variant with the
-\lstinline{-ing} suffix is used, like \lstinline{exchanging} in this case, and
-these variants are called called \textbf{yielding operations}. 
+\code{-ing} suffix is used, like \code{exchanging} in this case: these variants
+are called \textbf{yielding operations}. 
 %
-Essentially, a \lstinline{YieldingContext<Initial, Return>} is used inside
-yielding operations to act on an \lstinline{Initial} value --- that can, for
+Essentially, a \code{YieldingContext<Initial, Return>} is used inside
+yielding operations to act on an \code{Initial} value --- that can, for
 example, be exchanged with neighbors --- but \textbf{return a different value of
-type} \lstinline{Return} to the caller, without having to return the same value
+type} \code{Return} to the caller, without having to return the same value
 as for the normal version.
 
 In \cref{lst:p3-yielding-example} we can see an example of the usage of this
 yielding context, taken from the Collektive documentation. 
-
+%
 \lstinputlisting[
   float, 
   language=Kotlin, 
@@ -1178,19 +1188,19 @@ yielding context, taken from the Collektive documentation.
   caption={Example of usage of the yielding context in the Collektive DSL, 
   taken from the Collektive documentation}
 ]{listings/P3YieldingExample.kt}
-
-In the example provided, the \lstinline{exchanging} construct will still perform
-like the normal \lstinline{exchange} construct, which sends the results from the
-evaluation of the passed function to other devices and returns an object of type
-\lstinline{Field<Int, Int>}, but the entire operation will return another object
-of type \lstinline{Field<Int, String>}, resulted from the \lstinline{map} call
-inside the yielding action.
+%
+In the example provided, the \code{exchanging} construct will still perform like
+the normal one, which sends the results from the evaluation of the provided
+function to other devices and returns an object of type \code{Field<Int, Int>}.
+The entire operation, however, will return another object of type
+\code{Field<Int, String>}, resulted from the \code{map} call inside the yielding
+action.
 
 As it may have been guessed, the usage of this feature can be redundant: nothing
-prevents the developer from using this construct and return the same value as the
-one been computed and sent to the other devices by the construct, resulting in a 
-completely useless \lstinline{yielding} that could be safely substituted with the
-normal version of the construct. 
+prevents the developer from using this construct and return the same value as
+the one been computed and sent to the other devices by the construct, resulting
+in a useless \code{yielding} that could be safely substituted with the normal
+version of the construct. 
 %
 An example of this Pattern is shown in \cref{lst:p3-example}.
 
@@ -1199,24 +1209,24 @@ An example of this Pattern is shown in \cref{lst:p3-example}.
   language=Kotlin, 
   label={lst:p3-example},
   caption={Example of Pattern 3 detection in code, with an unecessary usage of a
-  yielding context, this time with the \lstinline{sharing} construct}
+  yielding context, this time with the \code{sharing} construct}
 ]{listings/P3Example.kt}
 
 \subsubsection{Formal description}
 
-Given a Collektive construct that accepts a \lstinline{YieldingContext} as
-parameter (e.g., \lstinline{exchanging}, \lstinline{evolving}, etc.), the
-pattern is satisfied when the expression returned inside the anonymous function
-passed as parameter to the \lstinline{yielding} call is \emph{equivalent} to the
-one used as its \emph{receiver}, therefore resulting in a redundant usage of the
-yielding context. 
+Given a Collektive \emph{yielding operation} (e.g., \code{exchanging},
+\code{evolving}, etc.), the pattern is satisfied when the expression
+returned inside the anonymous function passed as parameter to the
+\code{yielding} call is \emph{equivalent} to the one used as its
+\emph{receiver}, therefore resulting in a redundant usage of the yielding
+context. 
 
 \subsubsection{Design and Implementation}
 
 As previously introduced, this Pattern's checker will be based on the Visitor
-pattern. The checker can simply perform an initial check on the function name to
-intercept a Collektive construct that accepts a \lstinline{YieldingContext},
-based on a set of predefined, fully-qualified names. 
+pattern. The checker can perform an initial check on the function name to
+intercept a Collektive yielding operation based on a set of predefined,
+fully-qualified names. 
 %
 Once one of these constructs is found, the checker will delegate the inspection
 of the anonymous function to the implemented visitor, that will traverse the
@@ -1227,36 +1237,33 @@ Finally, the visitor will return a boolean value used to report the successful
 or unsuccessful detection of the pattern.
 
 The implementation of the checker can be seen in \cref{lst:p3-checker}. The core
-part is, of course, the visitor method call
-\lstinline{containsUnnecessaryYielding}, whose implementation will be briefly
-discussed in the following.
+part is the visitor method call \code{containsUnnecessaryYielding},
+whose implementation will be briefly discussed in the following.
 
 \lstinputlisting[
   float, 
   language=Kotlin, 
   label={lst:p3-checker},
-  caption={Implementation of the Pattern 3 checker: \lstinline{UnnecessaryYielding}}
+  caption={Implementation of the Pattern 3 checker: \code{UnnecessaryYielding}}
 ]{listings/P3Checker.kt}
 
 \subsubsection{Visitor implementation}
 
 To check if a function call corresponding to a construct with a yielding context
 matches the pattern, we need to inspect the anonymous function that is passed as
-parameter. When the visitor encounters a function call to the
-\lstinline{yielding} operation, it will simply save the \textbf{explicit
-receiver} of the call and then visit the anonymous function that is passed as
-parameter to \lstinline{yielding}.
+parameter. When the visitor encounters a function call to the \code{yielding}
+operation, it will save the \textbf{explicit receiver} of the call and then
+visit the anonymous function that is passed as parameter to \code{yielding}.
 %
 When visiting a \emph{return expression} of the anonymous function
 passed to the yielding construct, the visitor will check if the expression is
 \emph{equivalent} to the saved receiver of the yielding construct.
 %
-If so, the visitor will return \lstinline{true}, meaning that the pattern is
-detected, otherwise it will return \lstinline{false}. 
+If so, the visitor will return true, meaning that the pattern is detected,
+otherwise it will return false. 
 
-A behavior like this can be easily implemented using the
-\lstinline{FirVisitorVoid} class: the \cref{lst:p3-visitor} summarizes the visitor's
-implementation.
+A behavior like this can be implemented using the \code{FirVisitorVoid}
+class: the \cref{lst:p3-visitor} summarizes the visitor's implementation.
 
 \lstinputlisting[
   float, 
@@ -1265,19 +1272,19 @@ implementation.
   caption={Implementation of the Pattern 3 Visitor}
 ]{listings/P3Visitor.kt}
 
-The function \lstinline{isStructurallyEquivalentTo} is a utility function that
+The function \code{isStructurallyEquivalentTo} is a utility function that
 uses Kotlin \emph{expression rendering} to check if two expressions are 
 equivalent. For brevity purposes, its implementation is omitted.
 %
-The function \lstinline{containsUnnecessaryYielding} is also omitted, but its
-implementation is a simple as calling the visiting methods and return a boolean
-variable set during the exploration.
+The function \code{containsUnnecessaryYielding} is also omitted, but its
+implementation consists only of a call to the visiting methods, returning a
+boolean variable set during the exploration.
 
-It appears quite clear how a visitor approach to this task is very effective and
+Using the visitor approach to this task revealed itself to be more effective and
 limited in complexity compared to using the \ac{FIR} API on the elements
-directly. However, this still represents a very simple case, often solved by
-common static analysis checks for programming languages in similar situations
-(e.g., same expression on both sides of an assignment). Let's see how to 
+directly. However, this still represents a relatively simple case, often solved
+by common static analysis checks for programming languages in similar situations
+(e.g., same expression on both sides of an assignment). We will now see how to
 approach more complex cases with the visitor pattern.
 
 \subsection{Pattern 4: unnecessary construct usage}

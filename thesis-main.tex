@@ -41,12 +41,30 @@
 \frontmatter\frontispiece
 
 \begin{abstract}	
-Max 2000 characters, strict.
-\end{abstract}
+Static analysis is crucial in ensuring software quality, detecting potential
+errors, and enforcing coding standards. However, such tools are often
+unavailable for novel programming paradigms, limiting their adoption and
+development. This work explores the application of static analysis in the
+context of Aggregate Computing, a paradigm for designing and managing
+distributed systems. Specifically, it focuses on \emph{Collektive}, a
+Kotlin-based framework that provides an internal \ac{DSL} for Aggregate
+Computing.
 
-\begin{dedication} % this is optional
-Optional. Max a few lines.
-\end{dedication}
+To improve the reliability of Collektive programs, a compiler plugin was
+developed to perform static analysis during compilation. The plugin extends the
+Kotlin compiler using the new and experimental \ac{FIR} checkers to detect
+potential issues in aggregate computations, particularly regarding \emph{domain
+alignment} and misuse of \ac{DSL} constructs. Various detection patterns were
+identified and implemented, using techniques ranging from direct API inspections
+to tree traversal via visitor patterns.
+
+The development process, testing methodologies, challenges encountered, and the
+trade-offs of integrating static analysis within the compilation pipeline are
+discussed. While the plugin provides useful checks and integrates with
+development environment, it also highlights the limitations of the approaches
+explored, suggesting potential directions for further refinement and
+improvements in static analysis for internal DSL-based frameworks.
+\end{abstract}
 
 %----------------------------------------------------------------------------------------
 \tableofcontents   
@@ -2424,8 +2442,18 @@ turning them into a powerful asset rather than a niche solution.
 \bibliographystyle{alpha}
 \bibliography{bibliography}
 
-\begin{acknowledgements} % this is optional
-Optional. Max 1 page.
+\begin{acknowledgements}
+I would like to express my sincere gratitude to my advisor, Prof. Danilo
+Pianini, for guiding and supporting me throughout this work. I especially thank
+him for proposing a thesis topic that aligned as closely as possible with my
+interests and for helping me learn many new things along the way. I also extend
+my thanks to my co-advisors, Nicolas Farabegoli and Angela Cortecchia, for their
+helpful discussions and for proposing interesting ideas that contributed to the
+project.
+
+Finally, I am truly grateful to my family for their constant support
+throughout my master’s degree. Their encouragement has been essential in
+completing this journey.
 \end{acknowledgements}
 
 \end{document}

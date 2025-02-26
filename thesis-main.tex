@@ -15,7 +15,7 @@
 \supervisor{Danilo Pianini}
 \cosupervisor{Nicolas Farabegoli}
 \morecosupervisor{Angela Cortecchia}
-\session{III}
+\session{IV}
 \academicyear{2023-2024}
 
 % Definition of acronyms
@@ -80,9 +80,13 @@ improvements in static analysis for internal DSL-based frameworks.
 %----------------------------------------------------------------------------------------
 
 Analyzing characteristics of the source code without necessarily building and
-executing it --- i.e., static analysis --- is a process that has been studied and
-implemented in various forms during the last decades. Various tools have been
-developed to perform such a task, each with its own strengths and weaknesses.
+executing it --- i.e., static analysis --- is a process that has been studied
+and implemented in various forms during the last decades. Various tools have
+been developed to perform such a task (e.g.,
+\emph{Checkstyle}\footnote{\url{https://checkstyle.org/}} for Java,
+\emph{Detekt}\footnote{\url{https://detekt.dev/}} for Kotlin and also
+multi-language ones, like \emph{PMD}\footnote{\url{https://pmd.github.io/}} and
+many more), each with its own strengths and weaknesses.
 %
 The need for such a tool is often evident in the software development process,
 where ensuring the \textbf{quality} and \textbf{robustness} of software systems
@@ -94,10 +98,12 @@ maintenance and evolution.
 As the system grows in complexity, so does the variety of errors and
 vulnerabilities that can be detected through tools (e.g., concurrency management
 issues, error handling, etc.). At the same time, adhering to coding standards
-helps to avoid both trivial and non-trivial errors.
-Many tools exist to enforce these coding standards and to detect violations and,
-moreover, these are usually among the easiest types of tools to integrate, often
-already included within \acp{IDE}~\cite{DBLP:journals/queue/Thomson21}.
+helps to avoid both trivial and non-trivial errors. Many tools exist to enforce
+these coding standards (e.g.,
+\emph{Ktlint}\footnote{\url{https://pinterest.github.io/ktlint/latest/}} for
+Kotlin) and to detect violations and, moreover, these are usually among the
+easiest types of tools to integrate, often already included within
+\acp{IDE}~\cite{DBLP:journals/queue/Thomson21}.
 %
 The effectiveness of static analysis tools has been the subject of various
 studies~\cite{DBLP:journals/jss/LenarduzziPSLP23}, evaluating their detection
@@ -119,9 +125,9 @@ making it a threat, backed by a solid safety net.
 Despite all this, these tools are not always available out-of-the-box,
 especially in the case of new and experimental language paradigms. Developing
 useful static analysis tools means having a \textbf{deep understanding of the
-language} used to write the code, as well as \textbf{knowing the paradigm well
-enough} in order to reason about the main pitfalls and points of failure present
-within it.
+programming language} used to write the code, as well as \textbf{knowing the
+paradigm well enough} in order to reason about the main pitfalls and points of
+failure present within it.
 %
 Beyond this, static analysis tools are inherently difficult to develop, as they
 must be exceptionally reliable and robust. They serve as critical foundations
@@ -151,24 +157,21 @@ editors, and development pipelines, further increasing the complexity of their
 implementation.
 
 Even considering all of this, the challenge of developing these tools extends
-beyond technical complexity. For a static analysis tool to be created, the
-programming paradigm in question must first reach a sufficient level of
-\textbf{interest} and \textbf{usability} within the software development
-landscape: only then does the need for such a tool become evident. However, the
-growth and adoption of a new paradigm are often inhibited by the very absence of
-these tools, which have become essential in most development contexts. This
-creates a self-perpetuating cycle: without adequate tooling, a paradigm
-struggles to gain traction, yet without widespread adoption, there is little
-incentive to develop the necessary tools.
+beyond technical complexity. For a static analysis tool to be developed, the
+target paradigm often needs to generate sufficient interest and gain adoption
+among developers, otherwise it is not worth the effort of creating it. However,
+the growth and adoption of a new paradigm are often inhibited by the very
+absence of these tools, which have become essential in most development
+contexts. This creates a self-perpetuating cycle: without adequate tooling, a
+paradigm struggles to gain traction, yet without widespread adoption, there is
+little incentive to develop the necessary tools.
 %
 As a result, developers and industry stakeholders tend to fall back on
 well-established tools with mature and certified ecosystems, reinforcing the
-dominance of existing paradigms. This, in turn, leads to significant
-\emph{technical debt}, as developers are forced to work within paradigms that
-may not be the most suitable for the problem at hand. Beyond that, this
-situation also causes many promising research projects to remain confined within
-academia, preventing their potential impact on the broader software development
-industry. 
+dominance of existing paradigms and limiting the emergence of new possibilities.
+This, in turn, leads to significant \emph{technical debt}, as developers are
+forced to work within paradigms that may not be the most suitable for the
+problem at hand. 
 
 Knowing how to break this cycle could represent a great incentive to the
 development of new paradigms and tools.
@@ -182,14 +185,16 @@ many new paradigms do not require extensive general-purpose functionality,
 \acp{DSL} often provide a natural and efficient way to express the paradigm’s
 core concepts.
 %
-One of the key advantages of \acp{DSL} is their ability to bring the target
-domain closer to its usage and manipulation. This often results in a syntax that
-is more intuitive, sometimes even resembling natural language, and encourages a
-more declarative way of writing code. Additionally, because \acp{DSL} are
-inherently more restricted in scope than general-purpose languages, developing
-static analysis tools for them tends to be significantly easier. Their limited
-expressiveness reduces the complexity of the analysis, making it more feasible
-to create robust and effective tooling~\cite{DBLP:journals/csur/MernikHS05}. 
+One of the key advantages of \acp{DSL} is their ability to naturally represent
+the domain within the code, as they are specifically designed for it. This often
+results in a syntax that is more intuitive, sometimes even resembling natural
+language, and encourages a more declarative way of writing code. Additionally,
+because \acp{DSL} are inherently more restricted in scope than general-purpose
+languages, developing static analysis tools could focus on a smaller set of
+rules and patterns, making it easier to ensure their accuracy and reliability.
+Essentially, their limited expressiveness reduces the complexity of the
+analysis, making it more feasible to create robust and effective
+tooling~\cite{DBLP:journals/csur/MernikHS05}. 
 
 Recently, many new \acp{DSL} have been implemented as \emph{internal} to a host
 language. Internal \acp{DSL} are \emph{embedded} within a general-purpose
@@ -208,7 +213,7 @@ in their expressiveness, as the host language's capabilities can
 \acp{DSL} could suffer from scalability issues when the lack of full control
 over the language becomes an obstacle to the paradigm reflection in the code.
 Moreover, implementing custom static checks over the code could be difficult
-when the host language does not provide the necessary ``hooks'' to do so (i.e.,
+when the host language does not provide the necessary mechanisms to do so (i.e.,
 meta-programming capabilities).
 
 In conclusion, even though internal \acp{DSL} can be a solution to the first
@@ -284,12 +289,13 @@ robust support for compiler plugins, allowing developers to highly customize the
 compilation process to their specific needs. 
 %
 Kotlin's compiler architecture facilitates the creation of plugins that can
-modify or extend its behavior during compilation. For example, the
-\emph{all-open} compiler plugin in Kotlin allows classes annotated with a
-specific annotation to be \emph{open} (i.e., open for extensions, allowing the
-creation of subclasses) without the explicit \code{open} keyword, adapting
-Kotlin to the requirements of frameworks that need classes to have this
-characteristic. 
+modify or extend its behavior during compilation. For example, a popular plugin
+is the \emph{all-open} one: some frameworks (e.g.,
+\emph{Spring}\footnote{\url{https://spring.io/projects/spring-framework}})
+require all classes to be \code{open} (i.e., classes that can have subclasses,
+the contrary of \code{final} classes, which are default in Kotlin). Instead of
+having to manually annotate each class with the \code{open} keyword, this plugin
+does it automatically, facilitating this operation.
 
 When guiding developers towards the creation of compiler plugins, JetBrains
 compares them to \textbf{Annotation

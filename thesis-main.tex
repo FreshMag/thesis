@@ -79,23 +79,22 @@ issues, error handling, etc.). At the same time, adhering to coding standards
 helps to avoid both trivial and non-trivial errors from the outset.
 Many tools exist to enforce these coding standards and to detect violations and,
 moreover, these are usually among the easiest types of tools to integrate, often
-already included within \acp{IDE} \cite{DBLP:journals/queue/Thomson21}.
+already included within \acp{IDE}~\cite{DBLP:journals/queue/Thomson21}.
 %
 The effectiveness of static analysis tools has been the subject of various
-studies,  \cite{DBLP:journals/jss/LenarduzziPSLP23} evaluating their detection
+studies~\cite{DBLP:journals/jss/LenarduzziPSLP23}, evaluating their detection
 capabilities, agreement, and precision. Some of these studies revealed a low
 degree of agreement among the tools and highlighted the need for a better
 understanding of their actual capabilities. Highly advanced tools have been used
 also to rewrite code and help with the development of very complex systems, like
 \emph{Coccinelle} for \emph{collateral evolutions} inside the Linux kernel
-\cite{DBLP:conf/eurosys/PadioleauLHM08}\cite{DBLP:conf/usenix/LawallM18}.
+\cite{DBLP:conf/eurosys/PadioleauLHM08}.
 %
 More over, in the last years, the static analysis tools have become more popular
 and easier to use, becoming protagonists of many \ac{CI} pipelines
 \cite{DBLP:conf/msr/ZampettiSOCP17} that automatically performs checks on the
 entire source code, embracing change and evolution of the software without
-making it a threat \cite{DBLP:books/daglib/0015650}, backed by a solid safety
-net. 
+making it a threat, backed by a solid safety net. 
 
 \section{Static Analysis for novel paradigms}
 
@@ -172,7 +171,7 @@ more declarative way of writing code. Additionally, because \acp{DSL} are
 inherently more restricted in scope than general-purpose languages, developing
 static analysis tools for them tends to be significantly easier. Their limited
 expressiveness reduces the complexity of the analysis, making it more feasible
-to create robust and effective tooling \cite{DBLP:journals/csur/MernikHS05}. 
+to create robust and effective tooling~\cite{DBLP:journals/csur/MernikHS05}. 
 
 Recently, many new \acp{DSL} have been implemented as \emph{internal} to a host
 language. Internal \acp{DSL} are \emph{embedded} within a general-purpose
@@ -275,11 +274,12 @@ Kotlin to the requirements of frameworks that need classes to have this
 characteristic. 
 
 When guiding developers towards the creation of compiler plugins, JetBrains
-compares them to \textbf{Annotation Processors}
-\cite{JetBrains:KotlinCompilerPlugin}. Annotation processors are a powerful
-feature in many modern programming languages, including Java and Kotlin, that
-allow developers to generate code, validate code, and perform various
-compile-time checks based on \textbf{annotations} present in the source code.
+compares them to \textbf{Annotation
+Processors}\footnote{\url{https://resources.jetbrains.com/storage/products/kotlinconf2018/slides/5_Writing\%20Your\%20First\%20Kotlin\%20Compiler\%20Plugin.pdf}}.
+Annotation processors are a powerful feature in many modern programming
+languages, including Java and Kotlin, that allow developers to generate code,
+validate code, and perform various compile-time checks based on
+\textbf{annotations} present in the source code.
 %
 In Java, annotation processors are part of the Java Compiler API and can be used
 to generate additional source files, validate the correctness of the code, and
@@ -360,27 +360,29 @@ results and insights gained throughout this research.
 %----------------------------------------------------------------------------------------
 
 As already stated, the development of the frontend compiler plugin presented in
-this thesis will be built on top of an existing backend plugin. This one is
-part of a larger project named \emph{Collektive}, a Kotlin multiplatform
-framework that provides a \ac{DSL} for the \textbf{Aggregate Computing}
-\cite{Beal2015} paradigm. This chapter will provide an overview of the concepts
-behind Collektive as well as the features behind its backend plugin and Kotlin
-compiler plugins development in general.
+this thesis will be built on top of an existing backend plugin. This one is part
+of a larger project named \emph{Collektive}, a Kotlin multiplatform framework
+that provides a \ac{DSL} for the \textbf{Aggregate Computing}
+\cite{DBLP:journals/computer/BealPV15} paradigm. This chapter will provide an
+overview of the concepts behind Collektive as well as the features behind its
+backend plugin and Kotlin compiler plugins development in general.
 
 \section{Aggregate Computing: a novel paradigm}
 
 The Aggregate computing paradigm is a novel approach to ``design, create and
-maintain'' \cite{Beal2015} complex distributed systems, particularly in the 
-context of the Internet of Things (IoT). The paradigm shifts the focus from
-individual devices to regions of devices, abstracting away the details of their
-number, position, and behavior. This abstraction enables developers to reason
-about distributed systems in terms of \emph{collective} operations over spatial and
-temporal fields, rather than device-to-device interactions. 
+maintain''~\cite{DBLP:journals/computer/BealPV15} complex distributed systems,
+particularly in the context of the Internet of Things (IoT). The paradigm shifts
+the focus from individual devices to regions of devices, abstracting away the
+details of their number, position, and behavior. This abstraction enables
+developers to reason about distributed systems in terms of \emph{collective}
+operations over spatial and temporal fields, rather than device-to-device
+interactions. 
 
 The foundation of Aggregate Programming is built on \textbf{field calculus}
-\cite{Beal2014TowardsAU}, a set of constructs designed for \emph{spatial
-computing}. These constructs enable the implementation of robust coordination
-mechanisms, such as self-stabilizing and scalable operations \cite{Viroli2018}
+\cite{DBLP:journals/computer/BealPV15}, a set of constructs designed for
+\emph{spatial computing}. These constructs enable the implementation of robust
+coordination mechanisms, such as self-stabilizing and scalable operations
+\cite{DBLP:journals/tomacs/ViroliABDP18}
 \cite{DBLP:journals/jlap/ViroliBDACP19}, which adapt dynamically to changes in
 the environment. Applications of aggregate programming are particularly
 impactful in large-scale scenarios, such as crowd management during public
@@ -393,9 +395,9 @@ systems. Field calculus, as a foundational model, supports Aggregate Computing
 by enabling global-level manipulation of computational fields through a
 minimalistic syntax. 
 %
-Tools like Protelis \cite{DBLP:conf/saso/PianiniBV17}, ScaFi
+Tools like Protelis~\cite{DBLP:conf/saso/PianiniBV17}, ScaFi
 \cite{DBLP:conf/ecoop/CasadeiV16} and the recently proposed eXchange Calculus
-(XC) \cite{DBLP:journals/jss/AudritoCDSV24} extend field calculus principles,
+(XC)~\cite{DBLP:journals/jss/AudritoCDSV24} extend field calculus principles,
 providing programming frameworks and language constructs to bridge the gap
 between theoretical models and practical implementations.
 
@@ -403,7 +405,7 @@ Managing the programming line of action for these kinds of systems is not
 trivial, but several approaches have already been proposed, including static and
 dynamic checks that can spot subtle bugs and vulnerabilities in the code, by
 focusing on concepts like \textbf{neighborhood interactions} and \textbf{domain
-alignment} \cite{DBLP:conf/saso/AudritoDVC16}, which are crucial for the
+alignment}~\cite{DBLP:conf/saso/AudritoDVC16}, which are crucial for the
 correctness of the system.
 
 \begin{figure}
@@ -523,7 +525,7 @@ As previously introduced, Collektive provides an already integrated
 \textbf{backend compiler plugin}. This plugin is responsible for managing the
 \emph{alignment of aggregate computation}, a very important concept when dealing
 with Aggregate Computing programs, faced in several studies
-\cite{DBLP:conf/forte/DamianiVPB15} \cite{DBLP:conf/saso/AudritoDVC16}.
+\cite{DBLP:conf/forte/DamianiVPB15}~\cite{DBLP:conf/saso/AudritoDVC16}.
 %
 Essentially, the domain alignment is a necessary step to ensure that when a
 device computes a value that depends on neighboring devices (e.g., through the
@@ -557,9 +559,10 @@ Since Kotlin is a multiplatform language, the same source code can be compiled
 into low-level code specific to different targets, such as the JVM, JavaScript,
 and native platforms. In order to work with different targets, the Kotlin
 compiler architecture is divided into two sub-parts: the \emph{frontend} and the
-\emph{backend}\footnote{The following explanation is greatly
-inspired from the work of \cite{moskala2023}, which provides a more
-comprehensive overview of the Kotlin compiler plugins architecture.}.
+\emph{backend}\footnote{The following explanation is greatly inspired from the
+work of Marcin Moskala in his book ``Advanced Kotlin (Kotlin for Developers)'',
+which provides a more comprehensive overview of the Kotlin compiler plugins
+architecture.}.
 %
 The frontend is independent of the target, and for this reason its output can be
 reused when targeting different platforms. At the time of writing, this part of
@@ -575,7 +578,7 @@ later. The general structure is summarized in
 \begin{figure}
   \centering
   \includegraphics[width=.8\linewidth]{figures/kotlin-compiler-architecture.pdf}
-  \caption{Kotlin compiler architecture. Adapted from the one at \cite{moskala2023}}
+  \caption{Kotlin compiler architecture.}
   \label{fig:kotlin-compiler-architecture}
 \end{figure}
 
@@ -596,8 +599,7 @@ The general workflow is summarized in \cref{fig:kotlin-compiler-workflow}.
 \begin{figure}
   \centering
   \includegraphics[width=.9\linewidth]{figures/kotlin-compiler-workflow.pdf}
-  \caption{Kotlin compiler general workflow. Adapted and extended from the one
-  at \cite{moskala2023}}
+  \caption{Kotlin compiler general workflow.}
   \label{fig:kotlin-compiler-workflow}
 \end{figure}
 
@@ -755,7 +757,7 @@ frontend compiler plugin is motivated by three main reasons:
 
   \item \textbf{The presence of an internal DSL}: when building a \ac{DSL}, a
   developer must choose to make it \emph{internal} to a host language, like
-  Kotlin, or \emph{external}, like Protelis \cite{DBLP:conf/saso/PianiniBV17},
+  Kotlin, or \emph{external}, like Protelis~\cite{DBLP:conf/saso/PianiniBV17},
   and so take care of the parsing and the compilation process in general.
   %
   As already said, internal \acp{DSL} are typically easier to use and to
@@ -1115,7 +1117,7 @@ structure is the \emph{visitor pattern}. This pattern is particularly useful
 when the tree structure is complex and the operations that need to be performed
 on it are varied and not easily encapsulated in a single class. It is no
 coincidence that many of the available static analysis tools use this kind of
-approach \cite{DBLP:journals/jss/LenarduzziPSLP23}.
+approach~\cite{DBLP:journals/jss/LenarduzziPSLP23}.
 %
 The visitor pattern well fits the context of the Kotlin \ac{FIR}, since the
 structure resembles the one of the \ac{AST} built by the Kotlin parser. 
@@ -1563,7 +1565,7 @@ This aspect is related to the ``defensive'' approach for developing these static
 checkers: one could think that detecting the pattern is the core of the
 implementation but, in reality, one of the most important aspects is
 \textbf{being careful not to introduce false
-positives} \cite{DBLP:journals/jss/LenarduzziPSLP23} to the static analysis.
+positives}~\cite{DBLP:journals/jss/LenarduzziPSLP23} to the static analysis.
 %
 The cases we are trying to capture, in fact, are actually a very small subset of
 the possible programs using the Collektive \ac{DSL} (and Kotlin in general).

@@ -56,7 +56,7 @@ Kotlin compiler using the new and experimental \ac{FIR} checkers to detect
 potential issues in aggregate computations, particularly regarding \emph{domain
 alignment} and misuse of \ac{DSL} constructs. Various detection patterns were
 identified and implemented, using techniques ranging from direct API inspections
-to tree traversal via visitor patterns.
+to tree traversal via the visitor pattern.
 
 The development process, testing methodologies, challenges encountered, and the
 trade-offs of integrating static analysis within the compilation pipeline are
@@ -94,7 +94,7 @@ maintenance and evolution.
 As the system grows in complexity, so does the variety of errors and
 vulnerabilities that can be detected through tools (e.g., concurrency management
 issues, error handling, etc.). At the same time, adhering to coding standards
-helps to avoid both trivial and non-trivial errors from the outset.
+helps to avoid both trivial and non-trivial errors.
 Many tools exist to enforce these coding standards and to detect violations and,
 moreover, these are usually among the easiest types of tools to integrate, often
 already included within \acp{IDE}~\cite{DBLP:journals/queue/Thomson21}.

@@ -32,6 +32,7 @@
 \acrodef{FIR}{Frontend Intermediate Representation}
 \acrodef{PSI}{Programming Structure Interface}
 \acrodef{TDD}{Test-Driven Development}
+\acrodef{AC}{Aggregate Computing}
 
 
 \mainlinespacing{1.241} % line spacing in mainmatter, comment to default (1)
@@ -327,25 +328,27 @@ functionalities. While Annotation Processors are limited to generating source
 code and performing checks based on annotations, compiler plugins can exploit a
 very powerful API that can create and modify byte-code, elements inside the
 \ac{IR} and more, allowing the developers to solve a whole new class of
-meta-programming problems. In addition, the use of annotations in the code could
-make it more ``cluttered'' from the perspective of a \ac{DSL}, reducing it to
-constructs that belong more strictly to the host language, while the compiler
-plugin would not need these annotations. Of course, Annotation Processors are
-typically easier to write and maintain than compiler plugins, but this extra
-cost can be worth in several cases, for example in the scenario that will be
-presented in this thesis.
+meta-programming problems. 
+%
+In addition, the use of annotations in the code could make it more ``cluttered''
+from the perspective of a \ac{DSL}, since it would add elements that strictly
+belong to the host language and that clash with a more natural language-like
+view. The compiler plugin, instead, would not need these annotations, and could
+remain clear and untouched. Of course, Annotation Processors are typically
+easier to write and maintain than compiler plugins, but this extra cost can be
+worth in several cases, for example in the scenario that will be presented in
+this thesis.
 
 \subsection{Main challenges and requirements}
 
 At the time of writing, the development of frontend compiler plugins in Kotlin
-is still a relatively less explored area compared to the backend ones. Because
-of the very little documentation and examples available, the development of
-frontend compiler plugins can be a challenging task, that quite often requires
-inspecting the Kotlin compiler source code directly to understand how to
-interact with it.
+is still a relatively less explored area compared to the backend ones. Due to
+the limited documentation and examples available, the development of frontend
+compiler plugins can be a challenging task, that quite often requires inspecting
+the Kotlin compiler source code directly to understand how to interact with it.
 %
 Frontend compiler plugins can be implemented using \textit{Extensions} to the
-Kotlin compiler, a topic that will be covered more in detail in the following
+Kotlin compiler, a topic which will be explored in more detail in the following
 chapters. 
 
 This thesis presents the development process of a frontend compiler plugin
@@ -383,54 +386,47 @@ results and insights gained throughout this research.
 \label{chap:background}
 %----------------------------------------------------------------------------------------
 
-As already stated, the development of the frontend compiler plugin presented in
-this thesis will be built on top of an existing backend plugin. This one is part
-of a larger project named \emph{Collektive}, a Kotlin multiplatform framework
-that provides a \ac{DSL} for the \textbf{Aggregate Computing}
-\cite{DBLP:journals/computer/BealPV15} paradigm. This chapter will provide an
-overview of the concepts behind Collektive as well as the features behind its
-backend plugin and Kotlin compiler plugins development in general.
+As mentioned earlier, the development of the frontend compiler plugin presented
+in this thesis will be built on top of an existing backend plugin. This one is
+part of a larger project named \emph{Collektive}, a Kotlin multiplatform
+framework that provides an \emph{internal} \ac{DSL} for the \textbf{Aggregate
+Computing} \cite{DBLP:journals/computer/BealPV15} paradigm. This chapter will
+provide an overview of the concepts behind Collektive as well as the features
+behind its backend plugin and Kotlin compiler plugins development in general.
 
 \section{Aggregate Computing: a novel paradigm}
 
-The Aggregate computing paradigm is a novel approach to ``design, create and
-maintain''~\cite{DBLP:journals/computer/BealPV15} complex distributed systems,
-particularly in the context of the Internet of Things (IoT). The paradigm shifts
-the focus from individual devices to regions of devices, abstracting away the
-details of their number, position, and behavior. This abstraction enables
-developers to reason about distributed systems in terms of \emph{collective}
-operations over spatial and temporal fields, rather than device-to-device
-interactions. 
+The \ac{AC} paradigm is a novel \emph{macro-programming} approach that enables
+\textbf{collective behaviors} within a heterogeneous set of devices, inside an
+\emph{adaptive} \ac{IoT} system~\cite{DBLP:journals/computer/BealPV15}. The
+paradigm shifts the focus from individual devices to regions of devices,
+abstracting away the details of their number, position, and behavior. This
+abstraction enables developers to reason about distributed systems in terms of
+\emph{collective} operations over computational fields, rather than
+device-to-device interactions. 
 
 The foundation of Aggregate Programming is built on \textbf{field calculus}
-\cite{DBLP:journals/computer/BealPV15}, a set of constructs designed for
-\emph{spatial computing}. These constructs enable the implementation of robust
-coordination mechanisms, such as self-stabilizing and scalable operations
-\cite{DBLP:journals/tomacs/ViroliABDP18}
-\cite{DBLP:journals/jlap/ViroliBDACP19}, which adapt dynamically to changes in
-the environment. Applications of aggregate programming are particularly
-impactful in large-scale scenarios, such as crowd management during public
-events, where distributed devices coordinate to provide services like crowd
-density estimation, dispersal advice, and navigation support.
+\cite{DBLP:journals/computer/BealPV15}, a set of constructs that enable
+manipulations of data structures named \emph{Fields}, which map points in
+space-time. These constructs enable the implementation of robust coordination
+mechanisms that are \emph{self-stabilizing}, meaning they can adapt to changes
+in the environment and input values, gaining scalability to large networks and
+preserving resilience
+properties~\cite{DBLP:journals/computer/BealPV15}~\cite{DBLP:journals/tomacs/ViroliABDP18}~\cite{DBLP:journals/jlap/ViroliBDACP19}.
+Applications of aggregate programming are particularly impactful in large-scale
+scenarios, such as crowd management during public events, where distributed
+devices coordinate to provide services like crowd density estimation, dispersal
+advice, and navigation support.
 
 Aggregate computing formalism has been proposed in various ways, introducing
 syntaxes and semantics to support distributed, collective behaviors in dynamic
-systems. Field calculus, as a foundational model, supports Aggregate Computing
-by enabling global-level manipulation of computational fields through a
-minimalistic syntax. 
+systems.
 %
 Tools like Protelis~\cite{DBLP:conf/saso/PianiniBV17}, ScaFi
-\cite{DBLP:conf/ecoop/CasadeiV16} and the recently proposed eXchange Calculus
-(XC)~\cite{DBLP:journals/jss/AudritoCDSV24} extend field calculus principles,
-providing programming frameworks and language constructs to bridge the gap
-between theoretical models and practical implementations.
-
-Managing the programming line of action for these kinds of systems is not
-trivial, but several approaches have already been proposed, including static and
-dynamic checks that can spot subtle bugs and vulnerabilities in the code, by
-focusing on concepts like \textbf{neighborhood interactions} and \textbf{domain
-alignment}~\cite{DBLP:conf/saso/AudritoDVC16}, which are crucial for the
-correctness of the system.
+\cite{DBLP:conf/ecoop/CasadeiV16} and FCPP~\cite{DBLP:conf/acsos/Audrito20}
+extend field calculus principles, providing programming frameworks and language
+constructs to bridge the gap between theoretical models and practical
+implementations.
 
 \begin{figure}
   \centering
@@ -441,23 +437,23 @@ correctness of the system.
 
 \subsection{Applications and critical aspects}
 
-In Aggregate Computing, the main model of the system consists of a \emph{network of 
-intercommunicating devices}, which can be \emph{close} to one another therefore 
-introducing a concept of \textbf{neighborhood}. 
+In Aggregate Computing, the main model of the system consists of a \emph{network
+of intercommunicating devices}: each device can be \emph{close} to one another
+therefore introducing a concept of \textbf{neighborhood} of devices. 
 %
-Each device is equipped with \emph{sensors} and \emph{actuators}, enabling
-interaction with an environment, and can communicate with other devices through
-a \emph{message-passing} system. 
+Equipped with \emph{sensors} and \emph{actuators}, they can interact with an
+environment and communicate with other devices through a \emph{message-passing}
+system. 
 
-A key aspect of Aggregate Computing regards the execution model, which is based
-on a local program identical for all devices. The system is governed by a
-continuously executed loop that makes the devices (1) \emph{receive messages},
-(2) \emph{produce a result through their internal behavior} and finally (3)
-\emph{send values to neighbors}. 
+A key aspect of \ac{AC} regards the execution model, which is based on a local
+program identical for all devices. The system is governed by a continuously
+executed loop that makes the devices (1) \emph{receive messages}, (2)
+\emph{produce a result through a round of execution of the aggregate program}
+and finally (3) \emph{send values to neighbors}. 
 %
-This structure allows for system to show self-organizing behaviors emerging from
-the \emph{collective} of devices, and contemplates even complex interactions of
-the devices with the environment (e.g. creation of new devices).
+This structure allows for the system to show collective behaviors emerging from
+the network of devices, and contemplates even complex interactions of the
+devices with the environment through their sensors and actuators.
 
 Finally, as already said, the \emph{field calculus} model can be implemented
 through an ad-hoc API and syntax to perform operations on a \emph{computational
@@ -477,16 +473,16 @@ that allows developers to easily write Aggregate Computing programs (also called
 framework is designed to be multiplatform, targeting JVM, JavaScript and
 native platforms.
 %
-Compared to some other existing Aggregate Computing frameworks, Collektive
-offers a modern and idiomatic approach to writing aggregate programs,
-with a static type system (as it is internal to Kotlin) and few, expressive
-constructs like \code{neighboring} and \code{exchange}, which can be
-used to implement a broad variety of interactions between devices (and also
-Aggregate Computing patterns).
+Compared to some other existing \ac{AC} frameworks, Collektive offers a modern
+and idiomatic approach to writing aggregate programs, with a static type system
+(as it is internal to Kotlin) and few, expressive constructs like
+\code{neighboring} and \code{exchange}, which can be used to implement a broad
+variety of interactions between devices (and also Aggregate Computing patterns).
 
 The project is organized in modules, with the main one being the \textbf{dsl}
-and \textbf{compiler-plugin}, and is tested using the Alchemist simulator
-\cite{DBLP:journals/jos/PianiniMV13}. 
+and \textbf{compiler-plugin}, and also provides an integration for
+Alchemist~\cite{DBLP:journals/jos/PianiniMV13}, a simulator for pervasive,
+aggregate, and nature-inspired computing.
 
 \subsection{Collektive DSL: main concepts} \label{sec:collektive-dsl}
 
@@ -496,35 +492,36 @@ the rest of the document, a sufficient knowledge of the Kotlin programming
 language is necessary to grasp a large part of concepts exposed, and therefore
 will be assumed in many parts of the elaboration.
 
-Collektive DSL is centered around the \code{aggregate} function, which is the
-entry point for the aggregate program. The function uses a local ID to identify
-the device on which is executed on and then accepts a function as parameter that
-performs the aggregate computation using the \code{Aggregate} interface members.
+Collektive \ac{DSL} is centered around the \code{aggregate} function, which is
+the entry point for the aggregate program. The function uses a local ID to
+identify the device on which is executed on and then accepts a function as
+parameter that performs the aggregate computation using the \code{Aggregate}
+interface members.
 %
 This interface provides several functions that represent the main constructs of
-Collektive's implementation of the Aggregate Computing paradigm. The most
-important ones are:
+Collektive's implementation of the \ac{AC} paradigm. The most important ones
+are:
 \begin{itemize}
-  \item \code{neighboring}: a function that observes expressions on
-  neighbors, returning the related field;
-  \item \code{exchange}: a function that, taken from the documentation of
-  Collektive, ``manages the computation of values between neighbors in a
-  specific context''. In practice, it can be used to compute a new field of 
-  values starting from initial values of neighbors;
+  \item \code{exchange}: is the base construct that can be used to implement the
+  behavior of the other constructs. This operator models an \emph{anisotropic
+  communication} with neighbors --- i.e., different information is sent to 
+  different neighbors;
+  \item \code{share}: models the space-time evolution of the field with an
+  \emph{isotropic communication} --- i.e., information is sent uniformly in all
+  directions;
+  \item \code{neighboring}: observes expressions on neighbors, returning the
+  related field;
   \item \code{evolve}: updates an initial value iteratively computing an
-  expression at each device;
-  \item \code{share}: performs a field computation starting from neighbors'
-  values, reducing them to a single value and then sharing it with neighbors. 
-  It can be used to actuate a ``space-time evolution'' on the field.
+  expression at each device.
 \end{itemize}
 
-Some of these constructs is present also in a variant that allows to return a
-different type of value from the initial one; the name of the variant is the
-same of the original function but with the suffix \code{-ing} (e.g.,
-\code{exchanging}, \code{evolving} etc.). In \cref{lst:dsl-example} is shown an
-example of a Collektive program using the \ac{DSL}: it starts identifying each
-device using a \code{localId} and then shares the maximum value of the field
-with neighbors starting from an \code{initialValue}.
+Some of these constructs also have a variant that allows the program to return a
+value of a different type than the one \emph{sent} to the neighbors; the name of
+the variant is the same of the original function but with the suffix \code{-ing}
+(e.g., \code{exchanging}, \code{evolving} etc.). In \cref{lst:dsl-example} is
+shown an example of an aggregate program using the Collektive \ac{DSL}: it
+starts identifying each device using a \code{localId} and then shares the
+maximum value of the field with neighbors starting from an \code{initialValue}.
 
 \begin{lstlisting}[
   float, 
@@ -547,20 +544,21 @@ the already mentioned compiler plugin.
 
 As previously introduced, Collektive provides an already integrated
 \textbf{backend compiler plugin}. This plugin is responsible for managing the
-\emph{alignment of aggregate computation}, a very important concept when dealing
-with Aggregate Computing programs, faced in several studies
+\emph{alignment} inside aggregate programs --- i.e., the alignment of
+\emph{devices} that execute aggregate programs --- a very important concept when
+dealing with \ac{AC} programs, faced in several studies
 \cite{DBLP:conf/forte/DamianiVPB15}~\cite{DBLP:conf/saso/AudritoDVC16}.
 %
 Essentially, the domain alignment is a necessary step to ensure that when a
-device computes a value that depends on neighboring devices (e.g., through the
+device computes a value that depends on neighbor devices (e.g., through the
 \code{neighboring} construct, which retrieves values from neighbors), those
-neighboring devices have computed the same expression in the same evaluation
-round. This guarantees that shared computations remain consistent across
-devices: it is necessary in order to \textbf{maintain consistency between field
-values} and \text{prevent information leakage} because ``without it, information
-may leak unexpectedly between devices that are evaluating different functions,
-or may be “blocked” from passing between devices evaluating the same function''
-\cite{DBLP:conf/forte/DamianiVPB15}.
+devices have computed the same expression in the same evaluation round. This
+guarantees that shared computations remain consistent across devices: it is
+necessary in order to \textbf{maintain consistency between field values} and
+\textbf{prevent information leakage}. Without domain alignment, devices may
+execute the same function in different rounds, making it impossible to refer 
+to the same part of the aggregate program, which is the same for all devices,
+and therefore referring to different ``domains'' during the execution.
 
 Collektive \emph{backend} compiler plugins works by analyzing call sites and
 function definitions in the code, intercepting the ones that involve aggregate
@@ -570,8 +568,9 @@ especially when used as receiver, and visiting their declarations, wrapping
 aggregate constructs usages with special \code{align} and
 \code{dealign} functions that perform domain alignment under the hood.
 %
-As it will be shown, this is not always automatic or safe in certain situations
-(e.g., loops), and the frontend extension will take care of these extra checks. 
+As it will be shown in \cref{sec:p2} of the next chapter, this is not always
+automatic or safe in certain situations (e.g., loops), and the frontend
+extension will take care of these extra checks. 
 
 But how do Kotlin compiler plugins work in general? Before diving into the 
 core development of the frontend plugin, it is necessary to understand their
@@ -588,10 +587,11 @@ work of Marcin Moskala in his book ``Advanced Kotlin (Kotlin for Developers)'',
 which provides a more comprehensive overview of the Kotlin compiler plugins
 architecture.}.
 %
-The frontend is independent of the target, and for this reason its output can be
-reused when targeting different platforms. At the time of writing, this part of
-the compiler is being migrated to the new K2 version, which is supposed to be
-much more efficient than the previous K1 version.
+The frontend is independent of the target, and for this reason the result of its
+part of the pipeline --- i.e., the frontend \ac{IR} --- can be reused when
+targeting different platforms. Starting from the version 2 of the Kotlin
+Compiler, the frontend has been upgraded to a new structure called K2, which is
+supposed to be much more efficient than the previous K1 version.
 %
 The backend, on the other hand, is mostly specific to the target platform, and
 uses the output of the frontend to generate the final code. In reality, the
@@ -627,7 +627,7 @@ The general workflow is summarized in \cref{fig:kotlin-compiler-workflow}.
   \label{fig:kotlin-compiler-workflow}
 \end{figure}
 
-Before the so-called K2 frontend the compiler's frontend worked by
+Before the so-called K2 frontend, the compiler's frontend worked by
 building the \ac{PSI}, a syntactic model of the parsed source code, and the
 \code{BindingContext}, that holds semantic information such as types and
 symbol bindings (represented in \cref{fig:kotlin-compiler-workflow} as a whole). 
@@ -737,8 +737,8 @@ in \cref{fig:collektive-components-diagram}.
 \section{DSL and Compiler Plugins}
 
 In relation to what stated in \cref{sec:dsls}, the feature that is missing in
-most \emph{internal} DSLs is the ability to perform static analysis on the code
-that is written, and this is particularly difficult since the developers
+most \emph{internal} \acp{DSL} is the ability to perform static analysis on the
+code that is written, and this is particularly difficult since the developers
 struggle to intervene in the compilation process of the host language.
 %
 Compiler plugins seem perfect for this task since, in the case of Kotlin
@@ -748,8 +748,10 @@ is in fact internal to Kotlin and its main pitfalls --- and the ones of
 Aggregate Computing in general --- which are currently not captured can be
 spotted by a frontend plugin made for the job. 
 
-In other words, the frontend plugin can take care of the ``other half of the 
-problem'' introduced in \cref{sec:dsls}.
+In other words, the frontend plugin can take care of the ``second half of the
+problem'' introduced in \cref{sec:dsls}, that is the \emph{static analysis} of
+the code that is written in the internal \ac{DSL}, made specifically for
+approaching new paradigms with less technical challenges.
 
 \subsection{The importance of Build Tools}
 
@@ -805,8 +807,9 @@ frontend compiler plugin is motivated by three main reasons:
     compiler plugin requires low effort to be developed and needs almost zero
     modifications when extending the compiler plugin, differently from what
     would happen in the case of Gradle plugins wrapping external tools (e.g.
-    \emph{ktlint}). This means that it can be easily maintained and integrated
-    into other Gradle projects with low effort.
+    \emph{Ktlint}, one of the Kotlin linters available, needs a Gradle plugin to
+    be maintained along with the main tool). This means that it can be easily
+    maintained and integrated into other Gradle projects with low effort.
 
     \item \textbf{Rest of the pipeline}: the frontend plugin can be developed 
     very closely to the rest of the Collektive framework through submodules,
